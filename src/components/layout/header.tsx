@@ -7,7 +7,7 @@ import { getFirebaseServices } from '@/lib/firebase';
 import { signOut } from 'firebase/auth';
 import Logo from './logo';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Menu, Home, UserPlus, Trophy, Award, Users, LogIn, LayoutDashboard, LogOut, X, Mail } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -110,15 +110,17 @@ const Header = () => {
             </SheetTrigger>
             <SheetContent side="right" className="w-[300px] sm:w-[340px] p-0">
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between p-4 border-b">
+                <SheetHeader className="flex flex-row items-center justify-between p-4 border-b space-y-0">
                   <Logo/>
+                  <SheetTitle className="sr-only">Menu Principal</SheetTitle>
+                  <SheetDescription className="sr-only">Navigation principale du site</SheetDescription>
                   <SheetClose asChild>
                      <Button variant="ghost" size="icon">
                         <X className="h-6 w-6" />
                         <span className="sr-only">Fermer le menu</span>
                       </Button>
                   </SheetClose>
-                </div>
+                </SheetHeader>
                 <nav className="flex-grow p-4 space-y-2">
                   {navLinks.map((link) => (
                     <NavLink key={link.href} {...link} onClick={closeSheet} />
