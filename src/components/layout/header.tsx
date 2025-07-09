@@ -8,7 +8,7 @@ import { signOut } from 'firebase/auth';
 import Logo from './logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
-import { Menu, Home, UserPlus, Trophy, Award, Users, LogIn, LayoutDashboard, LogOut, X } from 'lucide-react';
+import { Menu, Home, UserPlus, Trophy, Award, Users, LogIn, LayoutDashboard, LogOut, X, Mail } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +17,7 @@ const navLinks = [
   { href: '/competition', label: 'Compétition', icon: Trophy },
   { href: '/results', label: 'Résultats', icon: Award },
   { href: '/partners', label: 'Partenaires', icon: Users },
+  { href: '/contact', label: 'Contact', icon: Mail },
 ];
 
 const NavLink = ({ href, label, icon: Icon, onClick }: { href: string; label: string; icon: React.ElementType; onClick?: () => void }) => {
