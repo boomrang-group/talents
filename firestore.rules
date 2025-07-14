@@ -1,38 +1,20 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Allow logged-in users to read from the users collection.
+    // This is for development purposes to get the admin panel working.
+    // For production, you should restrict this to admin roles.
     match /users/{userId} {
-      // Allow unauthenticated users to create their own user document during signup.
-      // This is necessary for the pre-payment step.
-      // We ensure the paymentStatus is set to 'pending'.
-      allow create: if request.auth == null
-                    && request.resource.data.paymentStatus == 'pending';
-
-      // Allow anyone to read user documents.
-      // This is required for the payment success page to check the payment status
-      // before creating the Firebase Auth user.
-      // WARNING: This is insecure as it exposes user data (name, email, etc.)
-      // to anyone who can guess the document ID. For a production app, you should
-      // refactor this to use a server-side function to check status without
-      // exposing user data to the client.
-      allow read: if true;
-
-      // Allow an authenticated user to update their own document,
-      // specifically to add their UID after their account is created.
-      // It checks that the UID is being set for the first time and matches the user's own UID.
-      allow update: if request.auth != null
-                    && request.auth.uid == request.resource.data.uid
-                    && resource.data.uid == null;
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
+    // Allow read/write access to payments collection for authenticated users
     match /payments/{paymentId} {
-      // Deny all client-side access to the payments collection.
-      // This collection should only be written to by your server-side
-      // /api/maxicash-notify endpoint, which uses admin privileges
-      // and bypasses these rules.
-      allow read, write: if false;
+       allow read, write: if request.auth != null;
     }
   }
 }
