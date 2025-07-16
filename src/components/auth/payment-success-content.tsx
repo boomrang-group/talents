@@ -33,6 +33,14 @@ export default function PaymentSuccessContent() {
         return;
     }
 
+    // Immediately try to confirm payment
+    fetch('/api/confirm-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userProfileId }),
+    }).catch(err => console.error("Could not optimistically update payment status:", err));
+
+
     const { firestore } = getFirebaseServices();
     if (!firestore) {
         setStatusMessage("Erreur de configuration du serveur. Veuillez contacter le support.");
@@ -52,8 +60,7 @@ export default function PaymentSuccessContent() {
         if (docSnap.exists()) {
             const userData = docSnap.data();
             
-            // paymentStatus is 'completed' when maxicash-notify hits, or 'account_created' if user reloads page.
-            if (userData.paymentStatus === 'completed' || userData.paymentStatus === 'account_created') {
+            if (userData.paymentStatus === 'completed') {
                 unsubscribe();
                 hasProcessed.current = true;
                 setStatusMessage("Paiement confirmé ! Votre inscription est maintenant complète.");
