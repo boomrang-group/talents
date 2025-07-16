@@ -2,6 +2,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -39,9 +40,10 @@ const app = initializeFirebaseApp();
 // We get the services only if the app was successfully initialized.
 const auth = app ? getAuth(app) : null;
 const firestore = app ? getFirestore(app) : null;
+const storage = app ? getStorage(app) : null;
 
 // Export a single function to get all firebase services.
 // Components can call this to get the (potentially null) services.
 export function getFirebaseServices() {
-    return { app, auth, firestore };
+    return { app, auth, firestore, storage };
 }

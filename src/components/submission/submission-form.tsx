@@ -18,17 +18,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { useAuth } from "@/context/auth-context";
+import { getFirebaseServices } from "@/lib/firebase";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+
 
 const submissionFormSchema = z.object({
   title: z.string().min(5, "Le titre doit contenir au moins 5 caractères."),
   description: z.string().min(20, "La description doit contenir au moins 20 caractères.").max(500, "La description ne peut pas dépasser 500 caractères."),
   category: z.string({ required_error: "Veuillez sélectionner une catégorie." }),
-  file: z.any().refine(file => file?.length > 0, "Un fichier est requis.")
-                 .refine(file => file?.[0]?.size <= 5000000, `La taille maximale du fichier est 5MB.`),
+  file: z.any()
+         .refine(files => files?.length > 0, "Un fichier est requis.")
+         .refine(files => files?.[0]?.size <= 10 * 1024 * 1024, `La taille maximale du fichier est 10MB.`),
   teamMembers: z.array(z.object({ email: z.string().email("Email de coéquipier invalide.") })).optional(),
   confirmSubmission: z.boolean().refine(val => val === true, {
     message: "Veuillez confirmer votre soumission.",
@@ -82,6 +88,9 @@ const categories = [
 export default function SubmissionForm() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<z.infer<typeof submissionFormSchema>>({
     resolver: zodResolver(submissionFormSchema),
@@ -114,27 +123,73 @@ export default function SubmissionForm() {
 
   const selectedCategory = form.watch("category");
 
-  function onSubmit(values: z.infer<typeof submissionFormSchema>) {
-    console.log(values);
-    toast({
-      title: "Soumission Réussie!",
-      description: `Votre projet "${values.title}" a été soumis avec succès.`,
-      variant: "default",
-    });
-    form.reset({
-      title: "",
-      description: "",
-      category: "",
-      teamMembers: [],
-      confirmSubmission: false,
-      songTitle: "",
-      musicPlatformLink: "",
-      dishName: "",
-      recipeSteps: "",
-      mainIngredients: "",
-      writtenPieceText: "",
-      file: undefined
-    });
+  async function onSubmit(values: z.infer<typeof submissionFormSchema>) {
+    setIsLoading(true);
+    if (!user) {
+      toast({
+        title: "Non authentifié",
+        description: "Vous devez être connecté pour soumettre un projet.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    const { firestore } = getFirebaseServices();
+    const storage = getStorage();
+    if (!firestore || !storage) {
+        toast({ title: "Erreur de configuration", description: "Services Firebase non disponibles.", variant: "destructive" });
+        setIsLoading(false);
+        return;
+    }
+
+    try {
+        const file = values.file[0];
+        const storageRef = ref(storage, `submissions/${user.uid}/${Date.now()}-${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        const downloadURL = await getDownloadURL(snapshot.ref);
+
+        const submissionData = {
+            userId: user.uid,
+            userName: user.displayName || user.email,
+            title: values.title,
+            description: values.description,
+            category: values.category,
+            fileUrl: downloadURL,
+            fileName: file.name,
+            fileType: file.type,
+            teamMembers: values.teamMembers,
+            status: "pending_review",
+            createdAt: serverTimestamp(),
+            // Category specific fields
+            songTitle: values.songTitle || null,
+            musicPlatformLink: values.musicPlatformLink || null,
+            dishName: values.dishName || null,
+            recipeSteps: values.recipeSteps || null,
+            mainIngredients: values.mainIngredients || null,
+            writtenPieceText: values.writtenPieceText || null,
+        };
+
+        await addDoc(collection(firestore, "submissions"), submissionData);
+
+        toast({
+            title: "Soumission Réussie!",
+            description: `Votre projet "${values.title}" a été soumis avec succès.`,
+            variant: "default",
+        });
+        form.reset();
+        router.push("/dashboard");
+
+    } catch (error) {
+        console.error("Submission error:", error);
+        toast({
+            title: "Erreur de soumission",
+            description: "Une erreur est survenue lors du téléversement de votre projet. Veuillez réessayer.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   const isGroupAccount = true; 
@@ -304,7 +359,7 @@ export default function SubmissionForm() {
                   />
               </FormControl>
               <FormDescription>
-                Formats acceptés: PDF, DOC(X), PPT(X), MP4, MP3, JPG, PNG, WAV, M4A, MOV, AVI, FLAC, OGG, TXT, RTF. Taille max: 5MB.
+                Formats acceptés: PDF, DOC(X), PPT(X), MP4, MP3, JPG, PNG, WAV, M4A, MOV, AVI, FLAC, OGG, TXT, RTF. Taille max: 10MB.
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -369,8 +424,9 @@ export default function SubmissionForm() {
           )}
         />
 
-        <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-          Soumettre mon Projet
+        <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={isLoading}>
+          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          {isLoading ? "Soumission en cours..." : "Soumettre mon Projet"}
         </Button>
       </form>
     </Form>
