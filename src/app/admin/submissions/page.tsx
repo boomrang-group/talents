@@ -20,7 +20,7 @@ interface Submission {
   userName: string;
   category: string;
   fileType: string;
-  status: 'pending_review' | 'validated' | 'rejected' | 'evaluated';
+  status: 'pending_review' | 'validated' | 'rejected';
   createdAt: Timestamp;
   // Add other fields as necessary
 }
@@ -29,7 +29,6 @@ const statusMapping: { [key: string]: { text: string; variant: "default" | "seco
   pending_review: { text: "En attente", variant: "secondary" },
   validated: { text: "Validé", variant: "default", className: "bg-green-600" },
   rejected: { text: "Rejeté", variant: "destructive" },
-  evaluated: { text: "Évalué", variant: "default", className: "bg-blue-600" },
 };
 
 const categoryNames: { [key: string]: string } = {
@@ -133,7 +132,6 @@ export default function AdminSubmissionsPage() {
                   <TableHead>Catégorie</TableHead>
                   <TableHead>Type Fichier</TableHead>
                   <TableHead>Statut</TableHead>
-                  <TableHead>Score Jury</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>
                     <span className="sr-only">Actions</span>
@@ -160,7 +158,6 @@ export default function AdminSubmissionsPage() {
                         {statusInfo.text}
                       </Badge>
                     </TableCell>
-                     <TableCell>{'N/A'}</TableCell>
                     <TableCell>{formatDate(submission.createdAt)}</TableCell>
                     <TableCell>
                       <DropdownMenu>
@@ -173,7 +170,7 @@ export default function AdminSubmissionsPage() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuItem asChild>
-                            <Link href={`/jury/evaluate/${submission.id}`}>Voir les détails</Link>
+                            <Link href={`/submission-details/${submission.id}`}>Voir les détails</Link>
                           </DropdownMenuItem>
                            <DropdownMenuItem>Valider</DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive">Rejeter</DropdownMenuItem>

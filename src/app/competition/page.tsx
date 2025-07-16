@@ -172,18 +172,6 @@ export default function CompetitionPage() {
         </TabsContent>
         
       </Tabs>
-
-      <div className="mt-16 text-center border-t pt-10">
-        <h2 className="text-2xl font-semibold font-headline mb-4">Êtes-vous membre du Jury ?</h2>
-        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Accédez à votre espace dédié pour évaluer les soumissions et contribuer au succès de Campus de Talents & de Savoir.
-        </p>
-        <Link href="/jury/login">
-          <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-            <Users className="mr-2 h-5 w-5" /> Accéder à l'Espace Jury
-          </Button>
-        </Link>
-      </div>
     </div>
   );
 }
