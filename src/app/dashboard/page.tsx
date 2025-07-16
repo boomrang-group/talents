@@ -1,43 +1,72 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { UploadCloud, Badge as BadgeIcon, History, PlusCircle, Eye, ThumbsUp, FileCheck, Info, CreditCard } from "lucide-react";
+import { UploadCloud, Badge as BadgeIcon, History, PlusCircle, Eye, ThumbsUp, FileCheck, Info, CreditCard, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/context/auth-context";
 import { useEffect, useState } from "react";
 import { getFirebaseServices } from "@/lib/firebase";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, collection, query, where, DocumentData } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
+
+interface UserSubmission extends DocumentData {
+  id: string;
+  title: string;
+  category: string;
+  status: 'pending_review' | 'validated' | 'rejected';
+  createdAt: { toDate: () => Date };
+}
+
+const statusMapping: { [key: string]: { text: string; variant: "default" | "secondary" | "destructive"; className?: string } } = {
+  pending_review: { text: "En attente", variant: "secondary" },
+  validated: { text: "Validé", variant: "default", className: "bg-green-600" },
+  rejected: { text: "Rejeté", variant: "destructive" },
+};
+
+const categoryNames: { [key: string]: string } = {
+  esthetique_mode: "Esthétique et Mode",
+  peinture: "Peinture",
+  cuisine: "Cuisine",
+  poesie: "Poésie",
+  art_oratoire: "Art Oratoire",
+  theatre: "Théâtre",
+  musique: "Musique",
+  danse: "Danse",
+};
 
 
 // Mock data - reset for pre-competition state
-const userSubmissions: any[] = [];
 const userBadges: any[] = [];
 const competitionHistory: any[] = [];
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [userProfile, setUserProfile] = useState<any | null>(null);
+  const [userSubmissions, setUserSubmissions] = useState<UserSubmission[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [loadingSubmissions, setLoadingSubmissions] = useState(true);
 
   useEffect(() => {
     if (user) {
       const { firestore } = getFirebaseServices();
       if (!firestore) {
         setLoadingProfile(false);
+        setLoadingSubmissions(false);
         return;
       };
 
+      // Listener for user profile
       const userDocRef = doc(firestore, 'users', user.uid);
-      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
+      const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
         if (docSnap.exists()) {
           setUserProfile(docSnap.data());
         } else {
-          setUserProfile(null); // User profile doesn't exist
+          setUserProfile(null);
         }
         setLoadingProfile(false);
       }, (error) => {
@@ -45,21 +74,40 @@ export default function DashboardPage() {
         setLoadingProfile(false);
       });
 
-      return () => unsubscribe();
+      // Listener for user submissions
+      const submissionsQuery = query(collection(firestore, "submissions"), where("userId", "==", user.uid));
+      const unsubscribeSubmissions = onSnapshot(submissionsQuery, (snapshot) => {
+        const submissionsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserSubmission));
+        setUserSubmissions(submissionsList);
+        setLoadingSubmissions(false);
+      }, (error) => {
+        console.error("Error fetching submissions:", error);
+        setLoadingSubmissions(false);
+      });
+
+      return () => {
+        unsubscribeProfile();
+        unsubscribeSubmissions();
+      };
     } else if (user === null) {
       // If user is not logged in, stop loading
       setLoadingProfile(false);
+      setLoadingSubmissions(false);
     }
   }, [user]);
+
+  const canSubmit = !loadingProfile && userProfile?.paymentStatus === 'completed';
 
   return (
     <div className="container py-8 md:py-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold font-headline mb-4 md:mb-0">Mon Tableau de Bord</h1>
-        <Button disabled={loadingProfile || userProfile?.paymentStatus !== 'completed'} className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed">
-          <PlusCircle className="mr-2 h-5 w-5" />
-          Nouvelle Soumission
-        </Button>
+         <Link href={canSubmit ? "/submission" : "#"} passHref>
+            <Button disabled={!canSubmit} className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed">
+              <PlusCircle className="mr-2 h-5 w-5" />
+              Nouvelle Soumission
+            </Button>
+        </Link>
       </div>
 
       {loadingProfile && (
@@ -81,14 +129,17 @@ export default function DashboardPage() {
             </AlertDescription>
         </Alert>
       )}
+      
+       {!loadingProfile && userProfile?.paymentStatus === 'completed' && (
+        <Alert className="mb-8 border-primary/50 bg-primary/10 text-primary">
+            <Info className="h-5 w-5 text-primary" />
+            <AlertTitle className="font-semibold">La compétition approche !</AlertTitle>
+            <AlertDescription>
+                Les soumissions de projets ouvriront le 4 août. Préparez-vous !
+            </AlertDescription>
+        </Alert>
+       )}
 
-      <Alert className="mb-8 border-primary/50 bg-primary/10 text-primary">
-          <Info className="h-5 w-5 text-primary" />
-          <AlertTitle className="font-semibold">La compétition approche !</AlertTitle>
-          <AlertDescription>
-            Les soumissions de projets ouvriront le 4 août. Préparez-vous !
-          </AlertDescription>
-      </Alert>
 
       <div className="grid gap-6 mb-8 md:grid-cols-3">
         <Card>
@@ -131,26 +182,32 @@ export default function DashboardPage() {
             <CardDescription>Suivez l'état de vos projets soumis.</CardDescription>
           </CardHeader>
           <CardContent>
-            {userSubmissions.length > 0 ? (
+            {loadingSubmissions ? (
+              <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : userSubmissions.length > 0 ? (
               <ul className="space-y-4">
-                {userSubmissions.map((submission) => (
-                  <li key={submission.id} className="p-4 border rounded-md hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-semibold">{submission.title}</h3>
-                        <p className="text-sm text-muted-foreground">{submission.category}</p>
+                {userSubmissions.map((submission) => {
+                  const statusInfo = statusMapping[submission.status] || { text: 'Inconnu', variant: 'secondary' };
+                  return (
+                    <li key={submission.id} className="p-4 border rounded-md hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-semibold">{submission.title}</h3>
+                          <p className="text-sm text-muted-foreground">{categoryNames[submission.category] || submission.category}</p>
+                        </div>
+                        <Badge variant={statusInfo.variant} className={statusInfo.className}>
+                            {statusInfo.text}
+                        </Badge>
                       </div>
-                      <Badge variant={submission.status === "Soumis" ? "secondary" : "default"} 
-                             className={submission.status === "En cours d'évaluation" ? "bg-yellow-500 text-white" : ""}>
-                        {submission.status}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">Soumis le: {submission.date}</p>
-                  </li>
-                ))}
+                      <p className="text-xs text-muted-foreground mt-1">Soumis le: {submission.createdAt.toDate().toLocaleDateString('fr-FR')}</p>
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
-              <p className="text-muted-foreground">Vous n'avez pas encore soumis de projet. Revenez après le 4 août !</p>
+              <p className="text-muted-foreground text-center py-10">Vous n'avez pas encore soumis de projet. Revenez après le 4 août !</p>
             )}
           </CardContent>
         </Card>
