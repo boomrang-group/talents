@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation"; 
 import { getFirebaseServices } from "@/lib/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { setDoc, doc } from "firebase/firestore";
+import { setDoc, doc, serverTimestamp } from "firebase/firestore";
 
 const categories = [
     { id: "esthetique_mode", name: "Esthétique et Mode" },
@@ -174,7 +174,7 @@ export default function SignupForm() {
             ? [{ name: values.name, email: values.email }].concat(values.memberDetails || []) 
             : null,
         categories: values.categories,
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
         paymentStatus: 'unpaid', // Set initial status to unpaid
       };
 
@@ -182,13 +182,14 @@ export default function SignupForm() {
       await setDoc(doc(firestore, "users", user.uid), userProfileData);
 
       toast({
-        title: "Inscription Réussie !",
-        description: "Votre compte a été créé. Vous allez être redirigé vers votre tableau de bord.",
+        title: "Compte Créé !",
+        description: "Vous allez être redirigé vers la page de paiement.",
         variant: "default",
       });
 
-      // 3. Redirect to dashboard
-      router.push("/dashboard");
+      // 3. Redirect to payment page
+      const memberCount = values.accountType === 'group' ? (values.memberDetails?.length || 0) + 1 : 1;
+      router.push(`/auth/payment?userProfileId=${user.uid}&email=${values.email}&phone=${values.phone || ''}&members=${memberCount}`);
 
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -474,7 +475,7 @@ export default function SignupForm() {
         />
 
         <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={isLoading}>
-          {isLoading ? "Création du compte..." : "S'inscrire"}
+          {isLoading ? "Création du compte..." : "S'inscrire et Payer"}
         </Button>
         <p className="text-center text-sm text-muted-foreground">
           Déjà un compte ?{" "}
