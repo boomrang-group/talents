@@ -12,6 +12,7 @@ import {
   Settings,
   ShoppingCart,
   Users2,
+  ListVideo
 } from "lucide-react"
 import {
   Breadcrumb,
@@ -39,6 +40,7 @@ const breadcrumbNameMap: { [key: string]: string } = {
   '/admin': 'Tableau de Bord',
   '/admin/users': 'Utilisateurs',
   '/admin/submissions': 'Soumissions',
+  '/admin/battles': 'Battles',
   '/admin/settings': 'Paramètres',
 };
 
@@ -71,9 +73,9 @@ export default function AdminHeader() {
               <Home className="h-5 w-5" />
               Tableau de Bord
             </Link>
-            <Link
+             <Link
               href="/admin/users"
-              className="flex items-center gap-4 px-2.5 text-foreground"
+              className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
             >
               <Users2 className="h-5 w-5" />
               Utilisateurs
@@ -84,6 +86,13 @@ export default function AdminHeader() {
             >
               <Package className="h-5 w-5" />
               Soumissions
+            </Link>
+            <Link
+              href="/admin/battles"
+              className="flex items-center gap-4 px-2.5 text-foreground"
+            >
+              <ListVideo className="h-5 w-5" />
+              Battles
             </Link>
             <Link
               href="/admin/settings"

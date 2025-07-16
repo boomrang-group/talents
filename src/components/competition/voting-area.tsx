@@ -3,56 +3,54 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ThumbsUp } from 'lucide-react';
+import { ThumbsUp, Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
+import { getFirebaseServices } from '@/lib/firebase';
+import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
 
+interface Battle extends DocumentData {
+  id: string;
+  title: string;
+  participantA: { userName: string };
+  participantB: { userName: string };
+  votesA: number;
+  votesB: number;
+}
 interface VotingAreaProps {
-  battleId: number;
-  // Assume options are predefined or fetched based on battleId
+  battle: Battle;
 }
 
-const options = [
-  { id: 'optionA', name: 'Projet Alpha' },
-  { id: 'optionB', name: 'Projet Gamma' },
-];
-
-export default function VotingArea({ battleId }: VotingAreaProps) {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [votes, setVotes] = useState<{ [key: string]: number }>({ optionA: 0, optionB: 0 });
-  const [totalVotes, setTotalVotes] = useState(0);
+export default function VotingArea({ battle }: VotingAreaProps) {
+  const [votes, setVotes] = useState({ A: battle.votesA, B: battle.votesB });
+  const [totalVotes, setTotalVotes] = useState(battle.votesA + battle.votesB);
   const [hasVoted, setHasVoted] = useState(false);
+  const [isVoting, setIsVoting] = useState<string | null>(null);
   const { toast } = useToast();
-  const [isClient, setIsClient] = useState(false);
-
+  
   useEffect(() => {
-    setIsClient(true);
-    // Mock initial votes and simulate real-time updates
-    const initialVotesA = Math.floor(Math.random() * 50) + 10;
-    const initialVotesB = Math.floor(Math.random() * 50) + 10;
-    setVotes({ optionA: initialVotesA, optionB: initialVotesB });
-    setTotalVotes(initialVotesA + initialVotesB);
+    // Check local storage if user has already voted
+    const voted = localStorage.getItem(`voted_battle_${battle.id}`);
+    if (voted) {
+        setHasVoted(true);
+    }
 
-    const interval = setInterval(() => {
-      setVotes(prevVotes => {
-        const newVotesA = prevVotes.optionA + (Math.random() > 0.7 ? Math.floor(Math.random() * 3) : 0);
-        const newVotesB = prevVotes.optionB + (Math.random() > 0.7 ? Math.floor(Math.random() * 3) : 0);
-        setTotalVotes(newVotesA + newVotesB);
-        return { optionA: newVotesA, optionB: newVotesB };
-      });
-    }, 3000); // Update votes every 3 seconds
+    const { firestore } = getFirebaseServices();
+    if (!firestore) return;
 
-    // Check if user has already voted for this battle (e.g., from localStorage)
-    // const userVote = localStorage.getItem(`vote_battle_${battleId}`);
-    // if (userVote) {
-    //   setHasVoted(true);
-    //   setSelectedOption(userVote);
-    // }
+    const battleRef = doc(firestore, 'battles', battle.id);
+    const unsubscribe = onSnapshot(battleRef, (doc) => {
+      if (doc.exists()) {
+        const data = doc.data();
+        setVotes({ A: data.votesA, B: data.votesB });
+        setTotalVotes(data.votesA + data.votesB);
+      }
+    });
 
-    return () => clearInterval(interval);
-  }, [battleId]);
+    return () => unsubscribe();
+  }, [battle.id]);
 
-  const handleVote = (optionId: string) => {
+  const handleVote = async (participant: 'A' | 'B') => {
     if (hasVoted) {
       toast({
         title: "Vote déjà enregistré",
@@ -61,20 +59,39 @@ export default function VotingArea({ battleId }: VotingAreaProps) {
       });
       return;
     }
-    setSelectedOption(optionId);
-    setVotes(prev => ({ ...prev, [optionId]: prev[optionId] + 1 }));
-    setTotalVotes(prev => prev + 1);
-    setHasVoted(true);
-    // localStorage.setItem(`vote_battle_${battleId}`, optionId);
-    toast({
-      title: "Vote enregistré!",
-      description: `Merci d'avoir voté pour ${options.find(o => o.id === optionId)?.name}.`,
-    });
+    
+    setIsVoting(participant);
+
+    try {
+      const response = await fetch('/api/vote-battle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ battleId: battle.id, participant }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Une erreur est survenue.');
+      }
+      
+      setHasVoted(true);
+      localStorage.setItem(`voted_battle_${battle.id}`, 'true');
+      toast({
+        title: "Vote enregistré!",
+        description: `Merci d'avoir voté pour ${participant === 'A' ? battle.participantA.userName : battle.participantB.userName}.`,
+      });
+
+    } catch (error: any) {
+      toast({ title: "Erreur de vote", description: error.message, variant: "destructive" });
+    } finally {
+      setIsVoting(null);
+    }
   };
   
-  if (!isClient) {
-    return <div className="p-4 bg-muted rounded-lg"><p>Chargement des votes...</p></div>;
-  }
+  const getPercentage = (participantVotes: number) => {
+    return totalVotes > 0 ? Math.round((participantVotes / totalVotes) * 100) : 0;
+  };
 
   return (
     <Card className="shadow-md">
@@ -82,27 +99,26 @@ export default function VotingArea({ battleId }: VotingAreaProps) {
         <CardTitle className="text-lg font-headline text-center">Votez pour votre projet préféré !</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {options.map(option => {
-          const percentage = totalVotes > 0 ? Math.round((votes[option.id] / totalVotes) * 100) : 0;
-          return (
+        {[
+            { id: 'A', name: battle.participantA.userName, voteCount: votes.A },
+            { id: 'B', name: battle.participantB.userName, voteCount: votes.B },
+        ].map(option => (
             <div key={option.id} className="space-y-2">
               <div className="flex justify-between items-center mb-1">
                 <h4 className="font-medium">{option.name}</h4>
-                <span className="text-sm text-muted-foreground">{votes[option.id]} votes ({percentage}%)</span>
+                <span className="text-sm text-muted-foreground">{option.voteCount} votes ({getPercentage(option.voteCount)}%)</span>
               </div>
-              <Progress value={percentage} className="h-3 [&>div]:bg-primary" />
+              <Progress value={getPercentage(option.voteCount)} className="h-3 [&>div]:bg-primary" />
               <Button
-                onClick={() => handleVote(option.id)}
-                disabled={hasVoted}
-                variant={selectedOption === option.id ? "default" : "outline"}
+                onClick={() => handleVote(option.id as 'A' | 'B')}
+                disabled={hasVoted || !!isVoting}
                 className="w-full mt-2 transition-all duration-300 ease-in-out"
               >
-                <ThumbsUp className="mr-2 h-4 w-4" />
-                Voter pour {option.name}
+                {isVoting === option.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ThumbsUp className="mr-2 h-4 w-4" />}
+                {isVoting === option.id ? "Vote en cours..." : `Voter pour ${option.name}`}
               </Button>
             </div>
-          );
-        })}
+          ))}
         {hasVoted && <p className="text-sm text-center text-green-600 font-medium">Merci pour votre vote !</p>}
          {!hasVoted && <p className="text-sm text-center text-muted-foreground">Un seul vote par utilisateur et par battle.</p>}
       </CardContent>

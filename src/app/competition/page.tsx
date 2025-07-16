@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,24 +16,24 @@ import {
   LogIn,
   Eye,
   Users,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { getFirebaseServices } from "@/lib/firebase";
+import { collection, query, onSnapshot, orderBy, DocumentData } from "firebase/firestore";
 
-interface LiveBattle {
-  id: number;
+interface LiveBattle extends DocumentData {
+  id: string;
   title: string;
-  time: string;
-  playerA: string;
-  playerB: string;
-  image: string;
-  dataAiHint: string;
-  description?: string;
+  scheduledAt: { toDate: () => Date };
+  participantA: { userName: string, fileUrl: string };
+  participantB: { userName: string, fileUrl: string };
+  status: 'scheduled' | 'live' | 'finished';
 }
 
-const liveBattles: LiveBattle[] = [];
 
 const competitionCategories = [
   { id: "esthetique_mode", name: "Esthétique et Mode", imageUrl: "/icons/categories/esthe.jpg", dataAiHint: "fashion runway" },
@@ -49,6 +49,22 @@ const competitionCategories = [
 
 export default function CompetitionPage() {
   const [selectedBattle, setSelectedBattle] = useState<LiveBattle | null>(null);
+  const [liveBattles, setLiveBattles] = useState<LiveBattle[]>([]);
+  const [loadingBattles, setLoadingBattles] = useState(true);
+
+  useEffect(() => {
+    const { firestore } = getFirebaseServices();
+    if (!firestore) return;
+
+    const q = query(collection(firestore, "battles"), orderBy("scheduledAt", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const battlesList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as LiveBattle));
+      setLiveBattles(battlesList);
+      setLoadingBattles(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div className="container py-8 md:py-12">
@@ -129,29 +145,33 @@ export default function CompetitionPage() {
                   <ArrowLeft className="mr-2 h-4 w-4" /> Retour à la liste des battles
                 </Button>
                 <CardTitle className="font-headline text-2xl">{selectedBattle.title}</CardTitle>
-                <CardDescription>{selectedBattle.time} - {selectedBattle.playerA} vs {selectedBattle.playerB}</CardDescription>
+                <CardDescription>{selectedBattle.scheduledAt.toDate().toLocaleString('fr-FR')} - {selectedBattle.participantA.userName} vs {selectedBattle.participantB.userName}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <LiveBattlePlayer videoSrc={selectedBattle.image} videoTitle={selectedBattle.title} dataAiHint={selectedBattle.dataAiHint} />
-                <VotingArea battleId={selectedBattle.id} />
+                <LiveBattlePlayer videoSrc={selectedBattle.participantA.fileUrl} videoTitle={selectedBattle.title} dataAiHint={"live music"} />
+                <VotingArea battle={selectedBattle} />
               </CardContent>
             </Card>
           ) : (
-            liveBattles.length > 0 ? (
+            loadingBattles ? (
+                 <div className="text-center py-12">
+                    <Loader2 className="mx-auto h-12 w-12 text-muted-foreground animate-spin mb-4" />
+                    <p className="text-muted-foreground">Chargement des battles...</p>
+                 </div>
+            ) : liveBattles.length > 0 ? (
               <div className="space-y-6">
                  <h2 className="text-2xl font-semibold text-center font-headline mb-6">Choisissez une Battle en Direct</h2>
                 {liveBattles.map(battle => (
                   <Card key={battle.id} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div className="relative h-48 md:h-full w-full md:col-span-1 rounded-l-md overflow-hidden">
-                             <Image src={battle.image} alt={battle.title} fill className="object-cover" data-ai-hint={battle.dataAiHint} />
+                             <Image src={"https://placehold.co/800x400.png"} alt={battle.title} fill className="object-cover" data-ai-hint={"music battle"} />
                         </div>
                         <div className="md:col-span-2 p-6 flex flex-col justify-between">
                             <div>
                                 <CardTitle className="font-headline text-xl mb-1">{battle.title}</CardTitle>
-                                <CardDescription className="text-sm mb-1">{battle.time}</CardDescription>
-                                <CardDescription className="text-sm font-medium mb-2">{battle.playerA} vs {battle.playerB}</CardDescription>
-                                <p className="text-xs text-muted-foreground mb-3">{battle.description}</p>
+                                <CardDescription className="text-sm mb-1">{battle.scheduledAt.toDate().toLocaleString('fr-FR')}</CardDescription>
+                                <CardDescription className="text-sm font-medium mb-2">{battle.participantA.userName} vs {battle.participantB.userName}</CardDescription>
                             </div>
                             <Button onClick={() => setSelectedBattle(battle)} className="w-full md:w-auto self-end bg-primary text-primary-foreground hover:bg-primary/90">
                                 <PlayCircle className="mr-2 h-4 w-4" /> Regarder et Voter

@@ -8,8 +8,7 @@ import {
   Package2,
   Settings,
   Users2,
-  ChevronLeft,
-  ChevronRight
+  ListVideo
 } from "lucide-react"
 
 import {
@@ -25,6 +24,7 @@ const navLinks = [
     { href: "/admin", icon: Home, label: "Tableau de Bord" },
     { href: "/admin/users", icon: Users2, label: "Utilisateurs" },
     { href: "/admin/submissions", icon: Package, label: "Soumissions" },
+    { href: "/admin/battles", icon: ListVideo, label: "Battles" },
 ];
 
 export default function AdminSidebar() {
