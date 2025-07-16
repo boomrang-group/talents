@@ -80,23 +80,28 @@ export default function AdminDashboardPage() {
           <CardHeader>
             <CardTitle>Soumissions Récentes</CardTitle>
              <CardDescription>
-              Les 5 dernières soumissions reçues.
+              Les dernières soumissions reçues apparaîtront ici.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Here you would map over real data */}
-            <p className="text-muted-foreground">Composant à développer (liste des soumissions).</p>
+            <div className="text-center py-8 text-muted-foreground">
+              <FileText className="mx-auto h-12 w-12" />
+              <p className="mt-4">Le module de gestion des soumissions est en cours de développement.</p>
+            </div>
           </CardContent>
         </Card>
         <Card className="col-span-3">
           <CardHeader>
             <CardTitle>Activité des Votes</CardTitle>
             <CardDescription>
-              Distribution des votes par catégorie.
+              Un graphique en temps réel des votes sera affiché ici.
             </CardDescription>
           </CardHeader>
           <CardContent>
-             <p className="text-muted-foreground">Composant à développer (graphique des votes).</p>
+             <div className="text-center py-8 text-muted-foreground">
+                <BarChart3 className="mx-auto h-12 w-12" />
+                <p className="mt-4">Le module de suivi des votes est en cours de développement.</p>
+            </div>
           </CardContent>
         </Card>
       </div>
