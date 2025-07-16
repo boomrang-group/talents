@@ -1,23 +1,85 @@
 // src/app/admin/submissions/page.tsx
 'use client'
 
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { MoreHorizontal, ListFilter } from "lucide-react"
+import { MoreHorizontal, ListFilter, Loader2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { getFirebaseServices } from "@/lib/firebase";
+import { collection, onSnapshot, Timestamp } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
-// Mock data for submissions
-const mockSubmissions = [
-  { id: "s001", title: "Composition 'Harmonie Nouvelle'", user: "Mélodie Pure", category: "Musique", type: "Audio", status: "Évalué", score: 96, date: "2024-08-05" },
-  { id: "s002", title: "Projet Alpha", user: "Groupe Innovatech", category: "Technologie", type: "Document", status: "En attente", score: null, date: "2024-08-06" },
-  { id: "s003", title: "Recette 'Saka Saka revisité'", user: "Chef Antoine", category: "Cuisine", type: "Vidéo", status: "Validé", score: 88, date: "2024-08-04" },
-  { id: "s004", title: "Tableau 'Lumière de Kinshasa'", user: "Artiste Visionnaire", category: "Peinture", type: "Image", status: "Rejeté", score: null, date: "2024-08-05" },
-];
+interface Submission {
+  id: string;
+  title: string;
+  userName: string;
+  category: string;
+  fileType: string;
+  status: 'pending_review' | 'validated' | 'rejected' | 'evaluated';
+  createdAt: Timestamp;
+  // Add other fields as necessary
+}
+
+const statusMapping: { [key: string]: { text: string; variant: "default" | "secondary" | "destructive"; className?: string } } = {
+  pending_review: { text: "En attente", variant: "secondary" },
+  validated: { text: "Validé", variant: "default", className: "bg-green-600" },
+  rejected: { text: "Rejeté", variant: "destructive" },
+  evaluated: { text: "Évalué", variant: "default", className: "bg-blue-600" },
+};
+
+const categoryNames: { [key: string]: string } = {
+  esthetique_mode: "Esthétique et Mode",
+  peinture: "Peinture",
+  cuisine: "Cuisine",
+  poesie: "Poésie",
+  art_oratoire: "Art Oratoire",
+  theatre: "Théâtre",
+  musique: "Musique",
+  danse: "Danse",
+};
+
 
 export default function AdminSubmissionsPage() {
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const { firestore } = getFirebaseServices();
+    if (!firestore) {
+      toast({ title: "Erreur", description: "Firestore n'est pas disponible.", variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    const submissionsCollection = collection(firestore, "submissions");
+    const unsubscribe = onSnapshot(submissionsCollection, (snapshot) => {
+      const submissionsList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Submission));
+      setSubmissions(submissionsList);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching submissions:", error);
+      toast({ title: "Erreur", description: "Impossible de charger les soumissions.", variant: "destructive" });
+      setLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, [toast]);
+
+  const formatDate = (timestamp: Timestamp) => {
+    if (!timestamp) return 'N/A';
+    return timestamp.toDate().toLocaleDateString('fr-FR');
+  };
+
   return (
     <Tabs defaultValue="all">
       <div className="flex items-center">
@@ -39,10 +101,9 @@ export default function AdminSubmissionsPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>Catégories</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem checked>Musique</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Technologie</DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>Cuisine</DropdownMenuCheckboxItem>
-                 <DropdownMenuCheckboxItem>Peinture</DropdownMenuCheckboxItem>
+                 {Object.entries(categoryNames).map(([id, name]) => (
+                  <DropdownMenuCheckboxItem key={id}>{name}</DropdownMenuCheckboxItem>
+                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
         </div>
@@ -56,12 +117,21 @@ export default function AdminSubmissionsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {loading ? (
+              <div className="flex justify-center items-center py-10">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : submissions.length === 0 ? (
+               <div className="text-center py-10 text-muted-foreground">
+                  Aucune soumission trouvée.
+              </div>
+            ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Titre du projet</TableHead>
                   <TableHead>Catégorie</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>Type Fichier</TableHead>
                   <TableHead>Statut</TableHead>
                   <TableHead>Score Jury</TableHead>
                   <TableHead>Date</TableHead>
@@ -71,26 +141,27 @@ export default function AdminSubmissionsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockSubmissions.map(submission => (
+                {submissions.map(submission => {
+                  const statusInfo = statusMapping[submission.status] || { text: 'Inconnu', variant: 'secondary' };
+                  return (
                   <TableRow key={submission.id}>
                     <TableCell className="font-medium">
                       <div className="font-medium">{submission.title}</div>
                       <div className="hidden text-sm text-muted-foreground md:inline">
-                          par {submission.user}
+                          par {submission.userName}
                       </div>
                     </TableCell>
-                    <TableCell>{submission.category}</TableCell>
+                    <TableCell>{categoryNames[submission.category] || submission.category}</TableCell>
                     <TableCell>
-                        <Badge variant="outline">{submission.type}</Badge>
+                        <Badge variant="outline">{submission.fileType}</Badge>
                     </TableCell>
                     <TableCell>
-                       <Badge variant={submission.status === 'Évalué' || submission.status === 'Validé' ? 'default' : submission.status === 'En attente' ? 'secondary' : 'destructive'}
-                              className={submission.status === 'Validé' ? 'bg-green-600' : ''}>
-                        {submission.status}
+                       <Badge variant={statusInfo.variant} className={statusInfo.className}>
+                        {statusInfo.text}
                       </Badge>
                     </TableCell>
-                     <TableCell>{submission.score ? `${submission.score}/100` : 'N/A'}</TableCell>
-                    <TableCell>{submission.date}</TableCell>
+                     <TableCell>{'N/A'}</TableCell>
+                    <TableCell>{formatDate(submission.createdAt)}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -101,16 +172,20 @@ export default function AdminSubmissionsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>Voir les détails</DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/jury/evaluate/${submission.id}`}>Voir les détails</Link>
+                          </DropdownMenuItem>
                            <DropdownMenuItem>Valider</DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive">Rejeter</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
+            )}
           </CardContent>
         </Card>
       </TabsContent>
