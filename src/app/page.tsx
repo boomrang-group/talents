@@ -12,10 +12,10 @@ export default function HomePage() {
       <section className="w-full py-20 lg:py-32 bg-gradient-to-br from-primary to-sky-400 text-primary-foreground">
         <div className="container text-center px-4 md:px-6">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-headline mb-6 tracking-tight">
-            Bantudemy – Campus de Talents & de Savoir
+            Talents Bantudemy
           </h1>
           <p className="text-lg md:text-xl lg:text-2xl mb-8 max-w-3xl mx-auto">
-            Rejoignez la compétition en ligne pour étudiants et révélez votre potentiel !
+            Découvrez et soutenez les plus incroyables talents panafricains. Votre vote compte !
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
             <Link href="/auth/signup">
