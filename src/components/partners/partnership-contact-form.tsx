@@ -118,7 +118,7 @@ export default function PartnershipContactForm() {
               <FormLabel>Votre proposition de partenariat</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Décrivez comment vous souhaitez collaborer avec Campus de Talents & de Savoir..."
+                  placeholder="Décrivez comment vous souhaitez collaborer avec Talents Bantudemy..."
                   className="resize-y min-h-[120px]"
                   {...field}
                 />

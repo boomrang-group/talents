@@ -34,7 +34,7 @@ export default function AdminSettingsPage() {
             <CardContent className="space-y-4">
                 <div className="grid gap-3">
                     <Label htmlFor="competition-name">Nom de la Compétition</Label>
-                    <Input id="competition-name" type="text" className="w-full" defaultValue="Campus de Talents & de Savoir" />
+                    <Input id="competition-name" type="text" className="w-full" defaultValue="Talents Bantudemy" />
                 </div>
                 <div className="grid gap-3">
                     <Label htmlFor="description">Description</Label>

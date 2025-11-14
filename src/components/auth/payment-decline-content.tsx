@@ -14,7 +14,7 @@ export default function PaymentDeclineContent() {
     <div className="space-y-6 text-center">
       <XCircle className="mx-auto h-16 w-16 text-destructive" />
  <p className="text-muted-foreground">
- Votre paiement pour l'inscription à Campus de Talents & de Savoir n'a pas abouti.
+ Votre paiement pour l'inscription à Talents Bantudemy n'a pas abouti.
  </p>
  {userProfileId && (
         <p className="text-xs text-muted-foreground">

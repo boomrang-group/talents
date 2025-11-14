@@ -169,7 +169,7 @@ export default function PaymentPage() {
     return (
         <AuthLayout
             title="Finaliser votre Inscription"
-            description="Une dernière étape pour rejoindre l'aventure Campus de Talents & de Savoir."
+            description="Une dernière étape pour rejoindre l'aventure Talents Bantudemy."
         >
             <Suspense fallback={<PaymentPageSkeleton />}>
               <PaymentPageContent />

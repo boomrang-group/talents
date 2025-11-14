@@ -77,7 +77,7 @@ export default function PartnersPage() {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-headline">Proposer un Partenariat</CardTitle>
             <CardDescription>
-              Vous souhaitez soutenir Campus de Talents & de Savoir ? Remplissez ce formulaire et notre équipe vous contactera.
+              Vous souhaitez soutenir Talents Bantudemy ? Remplissez ce formulaire et notre équipe vous contactera.
             </CardDescription>
           </CardHeader>
           <CardContent>

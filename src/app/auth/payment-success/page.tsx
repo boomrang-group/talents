@@ -16,7 +16,7 @@ export default function PaymentSuccessPage() {
   return (
     <AuthLayout
       title="Inscription Réussie et Paiement Confirmé !"
-      description="Bienvenue à Campus de Talents & de Savoir !"
+      description="Bienvenue à Talents Bantudemy !"
     >
       {isClient ? (
         <Suspense fallback={<PaymentSuccessPageSkeleton />}>

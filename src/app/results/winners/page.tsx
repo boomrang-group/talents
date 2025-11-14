@@ -11,7 +11,7 @@ export default function WinnersPage() {
         <Award className="mx-auto h-16 w-16 text-primary mb-4" />
         <h1 className="text-4xl md:text-5xl font-bold font-headline">Nos Brillants Gagnants</h1>
         <p className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">
-          Félicitations aux talents exceptionnels de cette édition de Campus de Talents & de Savoir !
+          Félicitations aux talents exceptionnels de cette édition de Talents Bantudemy !
         </p>
       </div>
 

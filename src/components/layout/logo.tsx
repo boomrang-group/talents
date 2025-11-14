@@ -6,7 +6,7 @@ const Logo = () => {
     <Link href="/" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
       <Image 
         src="/logo-cts.png"
-        alt="Campus de Talents & de Savoir CTS Logo" 
+        alt="Talents Bantudemy CTS Logo" 
         width={113} 
         height={40} 
         priority 
