@@ -24,8 +24,9 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuth } from "@/context/auth-context";
 import { getFirebaseServices } from "@/lib/firebase";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { Progress } from "@/components/ui/progress";
+
 
 const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/mov", "video/avi", "video/quicktime", "video/webm"];
 
@@ -36,7 +37,7 @@ const submissionFormSchema = z.object({
   category: z.string({ required_error: "Veuillez sélectionner une catégorie." }),
   file: z.any()
          .refine(files => files?.length > 0, "Un fichier est requis.")
-         .refine(files => files?.[0]?.size <= 10 * 1024 * 1024, `La taille maximale du fichier est 10MB.`)
+         .refine(files => files?.[0]?.size <= 100 * 1024 * 1024, `La taille maximale du fichier est 100MB.`)
          .refine(
             files => ACCEPTED_VIDEO_TYPES.includes(files?.[0]?.type),
             "Seuls les formats vidéo (.mp4, .mov, .avi, etc.) sont acceptés."
@@ -61,6 +62,7 @@ export default function SubmissionForm() {
   const router = useRouter();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   
   const form = useForm<z.infer<typeof submissionFormSchema>>({
     resolver: zodResolver(submissionFormSchema),
@@ -99,30 +101,59 @@ export default function SubmissionForm() {
     }
 
     const { firestore } = getFirebaseServices();
-    const storage = getStorage();
-    if (!firestore || !storage) {
+    if (!firestore) {
         toast({ title: "Erreur de configuration", description: "Services Firebase non disponibles.", variant: "destructive" });
         setIsLoading(false);
         return;
     }
 
     try {
-        const file = values.file[0];
-        const storageRef = ref(storage, `submissions/${user.uid}/${Date.now()}-${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(snapshot.ref);
+        // Step 1: Get an upload URL from our server
+        const uploadUrlResponse = await fetch('/api/mux/upload', {
+            method: 'POST',
+        });
+        if (!uploadUrlResponse.ok) {
+            throw new Error("Impossible d'obtenir une URL de téléversement.");
+        }
+        const { upload_url, asset_id } = await uploadUrlResponse.json();
 
+        // Step 2: Upload the file directly to Mux
+        const file = values.file[0];
+        
+        await new Promise<void>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open("PUT", upload_url, true);
+            xhr.upload.onprogress = (event) => {
+                if (event.lengthComputable) {
+                    const percentComplete = (event.loaded / event.total) * 100;
+                    setUploadProgress(percentComplete);
+                }
+            };
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve();
+                } else {
+                    reject(new Error(`Échec du téléversement: ${xhr.statusText}`));
+                }
+            };
+            xhr.onerror = () => reject(new Error("Erreur réseau lors du téléversement."));
+            xhr.send(file);
+        });
+
+        setUploadProgress(100); // Mark as complete before DB write
+
+        // Step 3: Save submission data to Firestore with Mux Asset ID
         const submissionData: any = {
             userId: user.uid,
             userName: user.displayName || user.email,
             title: values.title,
             description: values.description,
             category: values.category,
-            fileUrl: downloadURL,
-            fileName: file.name,
+            muxAssetId: asset_id,
+            muxPlaybackId: null, // This will be updated by the webhook
             fileType: file.type,
             teamMembers: values.teamMembers,
-            status: "pending_review",
+            status: "processing", // The video is being processed by Mux
             createdAt: serverTimestamp(),
             votes: 0,
         };
@@ -130,22 +161,23 @@ export default function SubmissionForm() {
         await addDoc(collection(firestore, "submissions"), submissionData);
 
         toast({
-            title: "Soumission Réussie!",
-            description: `Votre projet "${values.title}" a été soumis avec succès.`,
+            title: "Téléversement Réussi !",
+            description: `Votre projet "${values.title}" est en cours de traitement.`,
             variant: "default",
         });
         form.reset();
         router.push("/dashboard");
 
-    } catch (error) {
+    } catch (error: any) {
         console.error("Submission error:", error);
         toast({
             title: "Erreur de soumission",
-            description: "Une erreur est survenue lors du téléversement de votre projet. Veuillez réessayer.",
+            description: error.message || "Une erreur est survenue lors du téléversement de votre projet. Veuillez réessayer.",
             variant: "destructive",
         });
     } finally {
         setIsLoading(false);
+        setUploadProgress(null);
     }
   }
 
@@ -212,7 +244,7 @@ export default function SubmissionForm() {
         <FormField
           control={form.control}
           name="file"
-          render={({ field: { onChange, value, ...rest } }) => ( // `value` is handled by the file input itself
+          render={({ field: { onChange, value, ...rest } }) => ( 
             <FormItem>
               <FormLabel>Fichier vidéo du projet</FormLabel>
               <FormControl>
@@ -221,16 +253,24 @@ export default function SubmissionForm() {
                     accept="video/mp4,video/mov,video/avi,video/quicktime,video/webm" 
                     onChange={(e) => onChange(e.target.files)}
                     {...rest}
-                    ref={null} // react-hook-form doesn't need ref for file inputs if onChange is used
+                    ref={null}
                   />
               </FormControl>
               <FormDescription>
-                Seuls les fichiers vidéo sont acceptés. Taille max: 10MB.
+                Seuls les fichiers vidéo sont acceptés. Taille max: 100MB.
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
+
+         {uploadProgress !== null && (
+          <div className="space-y-2">
+            <Label>Progression du téléversement</Label>
+            <Progress value={uploadProgress} />
+            <p className="text-sm text-muted-foreground text-center">{Math.round(uploadProgress)}%</p>
+          </div>
+        )}
 
         {isGroupAccount && (
           <div>
