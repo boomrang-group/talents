@@ -59,7 +59,7 @@ export default function HomePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  Connectez-vous avec d'autres étudiants passionnés, formez des équipes et élargissez votre réseau.
+                  Connectez-vous avec d'autres talents passionnés, formez des équipes et élargissez votre réseau.
                 </p>
               </CardContent>
             </Card>

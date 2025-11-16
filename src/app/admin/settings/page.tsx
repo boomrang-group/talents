@@ -38,7 +38,7 @@ export default function AdminSettingsPage() {
                 </div>
                 <div className="grid gap-3">
                     <Label htmlFor="description">Description</Label>
-                    <Textarea id="description" defaultValue="Révélez votre potentiel dans la plus grande compétition en ligne pour étudiants." className="min-h-32" />
+                    <Textarea id="description" defaultValue="Révélez votre potentiel dans la plus grande compétition en ligne panafricaine." className="min-h-32" />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="grid gap-3">

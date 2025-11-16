@@ -65,7 +65,7 @@ export default function PartnersPage() {
                 <CardTitle className="font-headline">Réseautage Stratégique</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">Connectez-vous avec un écosystème d'étudiants, d'universités et d'autres entreprises.</p>
+                <p className="text-muted-foreground">Connectez-vous avec un écosystème de talents et d'entreprises.</p>
               </CardContent>
             </Card>
           </div>
