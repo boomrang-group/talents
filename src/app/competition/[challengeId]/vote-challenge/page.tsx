@@ -4,12 +4,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useParams, useRouter } from "next/navigation";
-import { ThumbsUp, ArrowLeft, Loader2, Info, PlayCircle } from "lucide-react";
-import Image from "next/image";
+import { ThumbsUp, ArrowLeft, Loader2, Info } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getFirebaseServices } from "@/lib/firebase";
 import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import MuxPlayer from "@mux/mux-player-react";
 
 const categoryNames: { [key: string]: string } = {
   danse: "Danse",
@@ -22,7 +22,7 @@ interface Submission {
   id: string;
   title: string;
   userName: string;
-  fileUrl: string;
+  fileUrl: string; // This will eventually become a Mux playbackId
   fileType: string;
   votes: number;
 }
@@ -111,15 +111,6 @@ export default function VoteChallengePage() {
         setVotingSubmissionId(null);
     }
   };
-  
-  const SubmissionPreview = ({ submission }: { submission: Submission }) => {
-    return (
-        <div className="bg-black flex items-center justify-center h-full">
-            <PlayCircle className="h-12 w-12 text-white/70" />
-            <p className="sr-only">Aperçu de la vidéo</p>
-        </div>
-    );
-  };
 
 
   if (loading) {
@@ -146,12 +137,14 @@ export default function VoteChallengePage() {
             <Card key={submission.id} className="p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                 <div className="md:col-span-1">
-                  <a href={submission.fileUrl} target="_blank" rel="noopener noreferrer" className="block relative w-full aspect-video rounded-md overflow-hidden group">
-                     <SubmissionPreview submission={submission} />
-                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <p className="text-white font-semibold">Voir la vidéo</p>
-                     </div>
-                  </a>
+                  <div className="w-full aspect-video rounded-md overflow-hidden group">
+                     {/* 
+                       NOTE: This is a demo playbackId. In a real application, 
+                       you would get this from your submission data in Firestore 
+                       (e.g., submission.muxPlaybackId) after uploading to Mux.
+                     */}
+                    <MuxPlayer playbackId="TE0203Iisgn202x402b1600yWdJg01p8iW2a1nZ" />
+                  </div>
                 </div>
                 <div className="md:col-span-2 space-y-3">
                   <h3 className="text-xl font-semibold font-headline">{submission.title}</h3>
