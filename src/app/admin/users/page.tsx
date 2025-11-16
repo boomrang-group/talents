@@ -67,16 +67,7 @@ export default function AdminUsersPage() {
             case 'completed': return { text: 'Actif', variant: 'default', className: 'bg-green-600' };
             case 'unpaid': return { text: 'En attente', variant: 'secondary', className: '' };
             case 'failed': return { text: 'Bloqué', variant: 'destructive', className: '' };
-            default: return { text: 'Inconnu', variant: 'outline', className: '' };
-        }
-    };
-
-    const getPaymentStatus = (paymentStatus: string) => {
-        switch (paymentStatus) {
-            case 'completed': return { text: 'Complété', variant: 'default', className: 'bg-blue-600' };
-            case 'unpaid': return { text: 'Requis', variant: 'outline', className: '' };
-            case 'failed': return { text: 'Échoué', variant: 'destructive', className: '' };
-            default: return { text: 'N/A', variant: 'outline', className: '' };
+            default: return { text: 'Actif', variant: 'default', className: 'bg-green-600' };
         }
     };
     
@@ -139,7 +130,6 @@ export default function AdminUsersPage() {
                     <TableHead>Nom</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Statut du compte</TableHead>
-                    <TableHead>Paiement</TableHead>
                     <TableHead>Date d'inscription</TableHead>
                     <TableHead>
                         <span className="sr-only">Actions</span>
@@ -149,7 +139,6 @@ export default function AdminUsersPage() {
                 <TableBody>
                     {users.map(user => {
                         const accountStatus = getAccountStatus(user.paymentStatus);
-                        const paymentStatus = getPaymentStatus(user.paymentStatus);
                         return (
                             <TableRow key={user.id}>
                                 <TableCell className="font-medium">
@@ -162,11 +151,6 @@ export default function AdminUsersPage() {
                                 <TableCell>
                                 <Badge variant={accountStatus.variant as any} className={accountStatus.className}>
                                     {accountStatus.text}
-                                </Badge>
-                                </TableCell>
-                                <TableCell>
-                                <Badge variant={paymentStatus.variant as any} className={paymentStatus.className}>
-                                    {paymentStatus.text}
                                 </Badge>
                                 </TableCell>
                                 <TableCell>{formatDate(user.createdAt)}</TableCell>

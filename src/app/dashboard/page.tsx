@@ -113,22 +113,6 @@ export default function DashboardPage() {
       {loadingProfile && (
           <Alert className="mb-8"><Skeleton className="h-12 w-full" /></Alert>
       )}
-
-      {!loadingProfile && userProfile && userProfile.paymentStatus === 'unpaid' && (
-        <Alert variant="destructive" className="mb-8 border-yellow-500/50 bg-yellow-500/10 text-yellow-700 dark:text-yellow-500">
-            <CreditCard className="h-5 w-5 text-yellow-700 dark:text-yellow-500" />
-            <AlertTitle className="font-semibold text-yellow-800 dark:text-yellow-400">Action Requise : Finalisez votre inscription</AlertTitle>
-            <AlertDescription className="text-yellow-700 dark:text-yellow-500/80">
-              Votre compte n'est pas encore actif. Veuillez compléter le paiement pour accéder à toutes les fonctionnalités et participer à la compétition.
-              <Link href={`/auth/payment?userProfileId=${user?.uid}&email=${userProfile.email}&phone=${userProfile.phone || ''}&members=${userProfile.groupMembers?.length || 1}`} passHref>
-                <Button className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white">
-                  <CreditCard className="mr-2 h-4 w-4" />
-                  Procéder au Paiement
-                </Button>
-              </Link>
-            </AlertDescription>
-        </Alert>
-      )}
       
        {!loadingProfile && userProfile?.paymentStatus === 'completed' && (
         <Alert className="mb-8 border-primary/50 bg-primary/10 text-primary">
