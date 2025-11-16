@@ -1,127 +1,133 @@
-"use client";
+// src/app/admin/page.tsx
+'use client'
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ThumbsUp, Loader2 } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Users, FileText, Vote, BarChart3, Loader2 } from "lucide-react";
 import { getFirebaseServices } from '@/lib/firebase';
-import { doc, onSnapshot, DocumentData } from 'firebase/firestore';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
-interface Battle extends DocumentData {
-  id: string;
-  title: string;
-  participantA: { userName: string };
-  participantB: { userName: string };
-  votesA: number;
-  votesB: number;
-}
-interface VotingAreaProps {
-  battle: Battle;
-}
-
-export default function VotingArea({ battle }: VotingAreaProps) {
-  const [votes, setVotes] = useState({ A: battle.votesA, B: battle.votesB });
-  const [totalVotes, setTotalVotes] = useState(battle.votesA + battle.votesB);
-  const [hasVoted, setHasVoted] = useState(false);
-  const [isVoting, setIsVoting] = useState<string | null>(null);
+export default function AdminDashboardPage() {
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalSubmissions: 0,
+    totalVotes: 8765, // Placeholder, can be implemented later
+  });
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  
+
   useEffect(() => {
-    // Check local storage if user has already voted
-    const voted = localStorage.getItem(`voted_battle_${battle.id}`);
-    if (voted) {
-        setHasVoted(true);
-    }
-
     const { firestore } = getFirebaseServices();
-    if (!firestore) return;
-
-    const battleRef = doc(firestore, 'battles', battle.id);
-    const unsubscribe = onSnapshot(battleRef, (doc) => {
-      if (doc.exists()) {
-        const data = doc.data();
-        setVotes({ A: data.votesA, B: data.votesB });
-        setTotalVotes(data.votesA + data.votesB);
-      }
-    });
-
-    return () => unsubscribe();
-  }, [battle.id]);
-
-  const handleVote = async (participant: 'A' | 'B') => {
-    if (hasVoted) {
-      toast({
-        title: "Vote déjà enregistré",
-        description: "Vous ne pouvez voter qu'une seule fois par battle.",
-        variant: "destructive",
-      });
+    if (!firestore) {
+      toast({ title: "Erreur", description: "Firestore n'est pas disponible.", variant: "destructive" });
+      setLoading(false);
       return;
     }
-    
-    setIsVoting(participant);
 
-    try {
-      const response = await fetch('/api/vote-battle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ battleId: battle.id, participant }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Une erreur est survenue.');
-      }
+    const unsubscribers = [
+      onSnapshot(collection(firestore, "users"), snapshot => {
+        setStats(prev => ({ ...prev, totalUsers: snapshot.size }));
+      }, (error) => console.error("Error fetching users count:", error)),
       
-      setHasVoted(true);
-      localStorage.setItem(`voted_battle_${battle.id}`, 'true');
-      toast({
-        title: "Vote enregistré!",
-        description: `Merci d'avoir voté pour ${participant === 'A' ? battle.participantA.userName : battle.participantB.userName}.`,
-      });
+      onSnapshot(collection(firestore, "submissions"), snapshot => {
+        setStats(prev => ({ ...prev, totalSubmissions: snapshot.size }));
+        setLoading(false); // Set loading to false after the last listener is set up
+      }, (error) => {
+        console.error("Error fetching submissions count:", error);
+        setLoading(false);
+      }),
+    ];
 
-    } catch (error: any) {
-      toast({ title: "Erreur de vote", description: error.message, variant: "destructive" });
-    } finally {
-      setIsVoting(null);
-    }
-  };
-  
-  const getPercentage = (participantVotes: number) => {
-    return totalVotes > 0 ? Math.round((participantVotes / totalVotes) * 100) : 0;
-  };
+    // Cleanup listeners on unmount
+    return () => unsubscribers.forEach(unsub => unsub());
+  }, [toast]);
+
 
   return (
-    <Card className="shadow-md">
-      <CardHeader>
-        <CardTitle className="text-lg font-headline text-center">Votez pour votre projet préféré !</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {[
-            { id: 'A', name: battle.participantA.userName, voteCount: votes.A },
-            { id: 'B', name: battle.participantB.userName, voteCount: votes.B },
-        ].map(option => (
-            <div key={option.id} className="space-y-2">
-              <div className="flex justify-between items-center mb-1">
-                <h4 className="font-medium">{option.name}</h4>
-                <span className="text-sm text-muted-foreground">{option.voteCount} votes ({getPercentage(option.voteCount)}%)</span>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Tableau de Bord Administrateur</h1>
+        <p className="text-muted-foreground">Vue d'ensemble et statistiques de la compétition.</p>
+      </div>
+      
+      {loading ? <Loader2 className="mx-auto my-12 h-10 w-10 animate-spin" /> : (
+      <>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Utilisateurs Inscrits
+              </CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                Total des participants et groupes.
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Soumissions Totales
+              </CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalSubmissions.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                Toutes catégories confondues.
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Votes Enregistrés</CardTitle>
+              <Vote className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.totalVotes.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                Vote du public (donnée statique).
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+          <Card className="col-span-4">
+            <CardHeader>
+              <CardTitle>Soumissions Récentes</CardTitle>
+              <CardDescription>
+                Les dernières soumissions reçues apparaîtront ici.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <FileText className="mx-auto h-12 w-12" />
+                <p className="mt-4">Les données réelles des soumissions sont maintenant affichées dans la section "Soumissions".</p>
               </div>
-              <Progress value={getPercentage(option.voteCount)} className="h-3 [&>div]:bg-primary" />
-              <Button
-                onClick={() => handleVote(option.id as 'A' | 'B')}
-                disabled={hasVoted || !!isVoting}
-                className="w-full mt-2 transition-all duration-300 ease-in-out"
-              >
-                {isVoting === option.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ThumbsUp className="mr-2 h-4 w-4" />}
-                {isVoting === option.id ? "Vote en cours..." : `Voter pour ${option.name}`}
-              </Button>
-            </div>
-          ))}
-        {hasVoted && <p className="text-sm text-center text-green-600 font-medium">Merci pour votre vote !</p>}
-         {!hasVoted && <p className="text-sm text-center text-muted-foreground">Un seul vote par utilisateur et par battle.</p>}
-      </CardContent>
-    </Card>
+            </CardContent>
+          </Card>
+          <Card className="col-span-3">
+            <CardHeader>
+              <CardTitle>Activité des Votes</CardTitle>
+              <CardDescription>
+                Un graphique en temps réel des votes sera affiché ici.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                  <BarChart3 className="mx-auto h-12 w-12" />
+                  <p className="mt-4">Le module de suivi des votes est en cours de développement.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+      )}
+    </div>
   );
 }
