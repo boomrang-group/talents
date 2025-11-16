@@ -32,14 +32,10 @@ const statusMapping: { [key: string]: { text: string; variant: "default" | "seco
 };
 
 const categoryNames: { [key: string]: string } = {
-  esthetique_mode: "Esthétique et Mode",
-  peinture: "Peinture",
-  cuisine: "Cuisine",
-  poesie: "Poésie",
-  art_oratoire: "Art Oratoire",
-  theatre: "Théâtre",
-  musique: "Musique",
   danse: "Danse",
+  slam_poesie: "Slam/Poésie",
+  musique: "Musique",
+  comedie: "Comédie",
 };
 
 

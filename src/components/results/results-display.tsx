@@ -13,14 +13,10 @@ import {
   Trophy, 
   Star, 
   Award,
-  Feather,
-  PersonStanding,
   Music,
-  MessageSquare,
-  Drama,
-  ChefHat,
-  Palette,
-  Paintbrush,
+  PersonStanding,
+  Mic,
+  Smile,
   Loader2,
   Info
 } from "lucide-react";
@@ -30,14 +26,10 @@ import { collection, query, where, getDocs, orderBy, DocumentData } from "fireba
 import { useToast } from "@/hooks/use-toast";
 
 const categories = [
-  { id: "esthetique_mode", name: "Esthétique et Mode", icon: <Palette className="mr-2 h-4 w-4"/> },
-  { id: "peinture", name: "Peinture", icon: <Paintbrush className="mr-2 h-4 w-4"/> },
-  { id: "cuisine", name: "Cuisine", icon: <ChefHat className="mr-2 h-4 w-4"/> },
-  { id: "poesie", name: "Poésie", icon: <Feather className="mr-2 h-4 w-4"/> },
-  { id: "art_oratoire", name: "Art Oratoire", icon: <MessageSquare className="mr-2 h-4 w-4"/> },
-  { id: "theatre", name: "Théâtre", icon: <Drama className="mr-2 h-4 w-4"/> },
-  { id: "musique", name: "Musique", icon: <Music className="mr-2 h-4 w-4"/> },
   { id: "danse", name: "Danse", icon: <PersonStanding className="mr-2 h-4 w-4"/> },
+  { id: "slam_poesie", name: "Slam/Poésie", icon: <Mic className="mr-2 h-4 w-4"/> },
+  { id: "musique", name: "Musique", icon: <Music className="mr-2 h-4 w-4"/> },
+  { id: "comedie", name: "Comédie", icon: <Smile className="mr-2 h-4 w-4"/> },
 ];
 
 interface RankedSubmission extends DocumentData {
@@ -119,7 +111,7 @@ export default function ResultsDisplay() {
       <CardContent>
         {hasAnyResults ? (
           <Tabs defaultValue={categories.find(c => rankingsData[c.id]?.length > 0)?.id || categories[0].id} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-1 mb-6">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 mb-6">
               {categories.map(cat => (
                 <TabsTrigger key={cat.id} value={cat.id} className="flex items-center text-xs sm:text-sm py-1.5 px-2" disabled={!rankingsData[cat.id] || rankingsData[cat.id].length === 0}>
                   {cat.icon}{cat.name}

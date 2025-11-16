@@ -27,14 +27,10 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { setDoc, doc, serverTimestamp } from "firebase/firestore";
 
 const categories = [
-    { id: "esthetique_mode", name: "Esthétique et Mode" },
-    { id: "peinture", name: "Peinture" },
-    { id: "cuisine", name: "Cuisine" },
-    { id: "poesie", name: "Poésie" },
-    { id: "art_oratoire", name: "Art Oratoire" },
-    { id: "theatre", name: "Théâtre" },
-    { id: "musique", name: "Musique" },
     { id: "danse", name: "Danse" },
+    { id: "slam_poesie", name: "Slam/Poésie" },
+    { id: "musique", name: "Musique" },
+    { id: "comedie", name: "Comédie" },
 ];
 
 const memberDetailSchema = z.object({

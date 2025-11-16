@@ -44,9 +44,6 @@ const submissionFormSchema = z.object({
   musicPlatformLink: z.string().optional().or(z.literal('')).refine(val => val === '' || z.string().url().safeParse(val).success, {
     message: "Veuillez entrer une URL valide ou laisser vide.",
   }),
-  dishName: z.string().optional(),
-  recipeSteps: z.string().optional(),
-  mainIngredients: z.string().optional(),
   writtenPieceText: z.string().optional(),
 
 }).superRefine((data, ctx) => {
@@ -55,18 +52,7 @@ const submissionFormSchema = z.object({
       ctx.addIssue({ path: ["songTitle"], message: "Le titre de la chanson est requis pour la catégorie Musique.", code: z.ZodIssueCode.custom });
     }
   }
-  if (data.category === "cuisine") {
-    if (!data.dishName || data.dishName.trim() === "") {
-      ctx.addIssue({ path: ["dishName"], message: "Le nom du plat est requis pour la catégorie Cuisine.", code: z.ZodIssueCode.custom });
-    }
-    if (!data.recipeSteps || data.recipeSteps.trim() === "") {
-      ctx.addIssue({ path: ["recipeSteps"], message: "Les étapes de la recette sont requises pour la catégorie Cuisine.", code: z.ZodIssueCode.custom });
-    }
-    if (!data.mainIngredients || data.mainIngredients.trim() === "") {
-      ctx.addIssue({ path: ["mainIngredients"], message: "Les ingrédients principaux sont requis pour la catégorie Cuisine.", code: z.ZodIssueCode.custom });
-    }
-  }
-  const textBasedCategories = ["poesie", "art_oratoire", "theatre"];
+  const textBasedCategories = ["slam_poesie", "comedie"];
   if (textBasedCategories.includes(data.category)) {
     if (!data.writtenPieceText || data.writtenPieceText.trim() === "") {
       ctx.addIssue({ path: ["writtenPieceText"], message: "Le texte de l'œuvre est requis pour cette catégorie.", code: z.ZodIssueCode.custom });
@@ -75,14 +61,10 @@ const submissionFormSchema = z.object({
 });
 
 const categories = [
-    { id: "esthetique_mode", name: "Esthétique et Mode" },
-    { id: "peinture", name: "Peinture" },
-    { id: "cuisine", name: "Cuisine" },
-    { id: "poesie", name: "Poésie" },
-    { id: "art_oratoire", name: "Art Oratoire" },
-    { id: "theatre", name: "Théâtre" },
-    { id: "musique", name: "Musique" },
     { id: "danse", name: "Danse" },
+    { id: "slam_poesie", name: "Slam/Poésie" },
+    { id: "musique", name: "Musique" },
+    { id: "comedie", name: "Comédie" },
 ];
 
 export default function SubmissionForm() {
@@ -102,9 +84,6 @@ export default function SubmissionForm() {
       confirmSubmission: false,
       songTitle: "",
       musicPlatformLink: "",
-      dishName: "",
-      recipeSteps: "",
-      mainIngredients: "",
       writtenPieceText: "",
     },
   });
@@ -149,7 +128,7 @@ export default function SubmissionForm() {
         const snapshot = await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(snapshot.ref);
 
-        const submissionData = {
+        const submissionData: any = {
             userId: user.uid,
             userName: user.displayName || user.email,
             title: values.title,
@@ -161,14 +140,17 @@ export default function SubmissionForm() {
             teamMembers: values.teamMembers,
             status: "pending_review",
             createdAt: serverTimestamp(),
-            // Category specific fields
-            songTitle: values.songTitle || null,
-            musicPlatformLink: values.musicPlatformLink || null,
-            dishName: values.dishName || null,
-            recipeSteps: values.recipeSteps || null,
-            mainIngredients: values.mainIngredients || null,
-            writtenPieceText: values.writtenPieceText || null,
+            votes: 0,
         };
+
+        if (values.category === 'musique') {
+          submissionData.songTitle = values.songTitle;
+          submissionData.musicPlatformLink = values.musicPlatformLink;
+        }
+
+        if (['slam_poesie', 'comedie'].includes(values.category)) {
+          submissionData.writtenPieceText = values.writtenPieceText;
+        }
 
         await addDoc(collection(firestore, "submissions"), submissionData);
 
@@ -204,7 +186,7 @@ export default function SubmissionForm() {
             <FormItem>
               <FormLabel>Titre du projet/de l'œuvre</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Plateforme d'e-learning innovante" {...field} />
+                <Input placeholder="Ex: Mon voyage poétique" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -282,58 +264,14 @@ export default function SubmissionForm() {
             />
           </>
         )}
-
-        {selectedCategory === "cuisine" && (
-          <>
-            <FormField
-              control={form.control}
-              name="dishName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom du plat</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Saka Saka revisité" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="recipeSteps"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Recette (Étapes)</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="1. Préparer les ingrédients...\n2. Cuire à feu doux..." {...field} rows={5} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="mainIngredients"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Ingrédients Principaux</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Feuilles de manioc, Huile de palme, Poisson fumé..." {...field} rows={3}/>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        )}
         
-        {["poesie", "art_oratoire", "theatre"].includes(selectedCategory || "") && (
+        {["slam_poesie", "comedie"].includes(selectedCategory || "") && (
            <FormField
             control={form.control}
             name="writtenPieceText"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Texte de l'œuvre (Poème, Discours, Script)</FormLabel>
+                <FormLabel>Texte de l'œuvre (Poème, Sketch, etc.)</FormLabel>
                 <FormControl>
                   <Textarea placeholder="Écrivez ou collez votre texte ici..." {...field} rows={10} />
                 </FormControl>
@@ -359,7 +297,7 @@ export default function SubmissionForm() {
                   />
               </FormControl>
               <FormDescription>
-                Formats acceptés: PDF, DOC(X), PPT(X), MP4, MP3, JPG, PNG, WAV, M4A, MOV, AVI, FLAC, OGG, TXT, RTF. Taille max: 10MB.
+                Formats: Média (vidéo, audio, image) ou Document (texte). Taille max: 10MB.
               </FormDescription>
               <FormMessage />
             </FormItem>

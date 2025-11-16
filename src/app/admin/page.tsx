@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, Vote, BarChart3, ListVideo, Loader2 } from "lucide-react";
+import { Users, FileText, Vote, BarChart3, Loader2 } from "lucide-react";
 import { getFirebaseServices } from '@/lib/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -13,7 +13,6 @@ export default function AdminDashboardPage() {
     totalUsers: 0,
     totalSubmissions: 0,
     totalVotes: 8765, // Placeholder, can be implemented later
-    totalBattles: 0,
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -33,13 +32,9 @@ export default function AdminDashboardPage() {
       
       onSnapshot(collection(firestore, "submissions"), snapshot => {
         setStats(prev => ({ ...prev, totalSubmissions: snapshot.size }));
-      }, (error) => console.error("Error fetching submissions count:", error)),
-
-      onSnapshot(collection(firestore, "battles"), snapshot => {
-        setStats(prev => ({ ...prev, totalBattles: snapshot.size }));
         setLoading(false); // Set loading to false after the last listener is set up
       }, (error) => {
-        console.error("Error fetching battles count:", error);
+        console.error("Error fetching submissions count:", error);
         setLoading(false);
       }),
     ];
@@ -58,7 +53,7 @@ export default function AdminDashboardPage() {
       
       {loading ? <Loader2 className="mx-auto my-12 h-10 w-10 animate-spin" /> : (
       <>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -96,18 +91,6 @@ export default function AdminDashboardPage() {
               <div className="text-2xl font-bold">{stats.totalVotes.toLocaleString()}</div>
               <p className="text-xs text-muted-foreground">
                 Vote du public (donnée statique).
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Battles Programmées</CardTitle>
-              <ListVideo className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalBattles}</div>
-              <p className="text-xs text-muted-foreground">
-                Battles en attente et en direct.
               </p>
             </CardContent>
           </Card>

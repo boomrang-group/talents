@@ -4,15 +4,12 @@
 import Link from "next/link"
 import {
   Home,
-  LineChart,
   Package,
   Package2,
   PanelLeft,
   Search,
   Settings,
-  ShoppingCart,
   Users2,
-  ListVideo
 } from "lucide-react"
 import {
   Breadcrumb,
@@ -40,7 +37,6 @@ const breadcrumbNameMap: { [key: string]: string } = {
   '/admin': 'Tableau de Bord',
   '/admin/users': 'Utilisateurs',
   '/admin/submissions': 'Soumissions',
-  '/admin/battles': 'Battles',
   '/admin/settings': 'Paramètres',
 };
 
@@ -86,13 +82,6 @@ export default function AdminHeader() {
             >
               <Package className="h-5 w-5" />
               Soumissions
-            </Link>
-            <Link
-              href="/admin/battles"
-              className="flex items-center gap-4 px-2.5 text-foreground"
-            >
-              <ListVideo className="h-5 w-5" />
-              Battles
             </Link>
             <Link
               href="/admin/settings"

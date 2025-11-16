@@ -18,16 +18,6 @@ service cloud.firestore {
       allow create: if request.auth != null || request.auth == null; // Allow anonymous and authed
     }
     
-    match /battles/{battleId} {
-      allow read: if true;
-      allow create, update, delete: if request.auth != null; // Should be restricted to admins
-    }
-
-    match /battle_votes/{voteId} {
-      allow read: if true;
-      allow create: if request.auth != null || request.auth == null; // Allow anonymous and authed
-    }
-    
     // Allow read/write to payments collection for authenticated users (for now)
     // In production, you might restrict this to server-side processes
     match /payments/{paymentId} {
