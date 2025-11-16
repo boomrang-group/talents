@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useParams, useRouter } from "next/navigation";
-import { ThumbsUp, ArrowLeft, Loader2, Info } from "lucide-react";
+import { ThumbsUp, ArrowLeft, Loader2, Info, PlayCircle } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { getFirebaseServices } from "@/lib/firebase";
@@ -113,11 +113,12 @@ export default function VoteChallengePage() {
   };
   
   const SubmissionPreview = ({ submission }: { submission: Submission }) => {
-    if (submission.fileType.startsWith('image/')) {
-      return <Image src={submission.fileUrl} alt={submission.title} fill className="object-cover" data-ai-hint="project preview" />;
-    }
-    // Add more preview types if needed (video, audio)
-    return <div className="bg-muted flex items-center justify-center h-full"><p className="text-sm text-muted-foreground">Aperçu non disponible</p></div>;
+    return (
+        <div className="bg-black flex items-center justify-center h-full">
+            <PlayCircle className="h-12 w-12 text-white/70" />
+            <p className="sr-only">Aperçu de la vidéo</p>
+        </div>
+    );
   };
 
 
@@ -145,9 +146,12 @@ export default function VoteChallengePage() {
             <Card key={submission.id} className="p-4 sm:p-6 shadow-md hover:shadow-lg transition-shadow">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
                 <div className="md:col-span-1">
-                  <div className="relative w-full aspect-video rounded-md overflow-hidden">
+                  <a href={submission.fileUrl} target="_blank" rel="noopener noreferrer" className="block relative w-full aspect-video rounded-md overflow-hidden group">
                      <SubmissionPreview submission={submission} />
-                  </div>
+                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <p className="text-white font-semibold">Voir la vidéo</p>
+                     </div>
+                  </a>
                 </div>
                 <div className="md:col-span-2 space-y-3">
                   <h3 className="text-xl font-semibold font-headline">{submission.title}</h3>

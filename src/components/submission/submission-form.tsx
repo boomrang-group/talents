@@ -27,6 +27,8 @@ import { getFirebaseServices } from "@/lib/firebase";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
+const ACCEPTED_VIDEO_TYPES = ["video/mp4", "video/mov", "video/avi", "video/quicktime", "video/webm"];
+
 
 const submissionFormSchema = z.object({
   title: z.string().min(5, "Le titre doit contenir au moins 5 caractères."),
@@ -34,30 +36,16 @@ const submissionFormSchema = z.object({
   category: z.string({ required_error: "Veuillez sélectionner une catégorie." }),
   file: z.any()
          .refine(files => files?.length > 0, "Un fichier est requis.")
-         .refine(files => files?.[0]?.size <= 10 * 1024 * 1024, `La taille maximale du fichier est 10MB.`),
+         .refine(files => files?.[0]?.size <= 10 * 1024 * 1024, `La taille maximale du fichier est 10MB.`)
+         .refine(
+            files => ACCEPTED_VIDEO_TYPES.includes(files?.[0]?.type),
+            "Seuls les formats vidéo (.mp4, .mov, .avi, etc.) sont acceptés."
+         ),
   teamMembers: z.array(z.object({ email: z.string().email("Email de coéquipier invalide.") })).optional(),
   confirmSubmission: z.boolean().refine(val => val === true, {
     message: "Veuillez confirmer votre soumission.",
   }),
 
-  songTitle: z.string().optional(),
-  musicPlatformLink: z.string().optional().or(z.literal('')).refine(val => val === '' || z.string().url().safeParse(val).success, {
-    message: "Veuillez entrer une URL valide ou laisser vide.",
-  }),
-  writtenPieceText: z.string().optional(),
-
-}).superRefine((data, ctx) => {
-  if (data.category === "musique") {
-    if (!data.songTitle || data.songTitle.trim() === "") {
-      ctx.addIssue({ path: ["songTitle"], message: "Le titre de la chanson est requis pour la catégorie Musique.", code: z.ZodIssueCode.custom });
-    }
-  }
-  const textBasedCategories = ["slam_poesie", "comedie"];
-  if (textBasedCategories.includes(data.category)) {
-    if (!data.writtenPieceText || data.writtenPieceText.trim() === "") {
-      ctx.addIssue({ path: ["writtenPieceText"], message: "Le texte de l'œuvre est requis pour cette catégorie.", code: z.ZodIssueCode.custom });
-    }
-  }
 });
 
 const categories = [
@@ -82,9 +70,6 @@ export default function SubmissionForm() {
       category: "", // Initialize category as empty or handle undefined better
       teamMembers: [],
       confirmSubmission: false,
-      songTitle: "",
-      musicPlatformLink: "",
-      writtenPieceText: "",
     },
   });
 
@@ -100,7 +85,6 @@ export default function SubmissionForm() {
     name: "teamMembers",
   });
 
-  const selectedCategory = form.watch("category");
 
   async function onSubmit(values: z.infer<typeof submissionFormSchema>) {
     setIsLoading(true);
@@ -142,15 +126,6 @@ export default function SubmissionForm() {
             createdAt: serverTimestamp(),
             votes: 0,
         };
-
-        if (values.category === 'musique') {
-          submissionData.songTitle = values.songTitle;
-          submissionData.musicPlatformLink = values.musicPlatformLink;
-        }
-
-        if (['slam_poesie', 'comedie'].includes(values.category)) {
-          submissionData.writtenPieceText = values.writtenPieceText;
-        }
 
         await addDoc(collection(firestore, "submissions"), submissionData);
 
@@ -234,70 +209,23 @@ export default function SubmissionForm() {
           )}
         />
 
-        {selectedCategory === "musique" && (
-          <>
-            <FormField
-              control={form.control}
-              name="songTitle"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Titre de la chanson</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Mon Hymne à la Joie" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="musicPlatformLink"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Lien vers la musique (SoundCloud, YouTube, etc.) - Optionnel</FormLabel>
-                  <FormControl>
-                    <Input type="url" placeholder="https://soundcloud.com/..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </>
-        )}
-        
-        {["slam_poesie", "comedie"].includes(selectedCategory || "") && (
-           <FormField
-            control={form.control}
-            name="writtenPieceText"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Texte de l'œuvre (Poème, Sketch, etc.)</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Écrivez ou collez votre texte ici..." {...field} rows={10} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-
         <FormField
           control={form.control}
           name="file"
           render={({ field: { onChange, value, ...rest } }) => ( // `value` is handled by the file input itself
             <FormItem>
-              <FormLabel>Fichier principal du projet</FormLabel>
+              <FormLabel>Fichier vidéo du projet</FormLabel>
               <FormControl>
                  <Input 
                     type="file" 
-                    accept=".pdf,.doc,.docx,.ppt,.pptx,.mp4,.mp3,.jpg,.jpeg,.png,.wav,.m4a,.mov,.avi,.flac,.ogg,.txt,.rtf" 
+                    accept="video/mp4,video/mov,video/avi,video/quicktime,video/webm" 
                     onChange={(e) => onChange(e.target.files)}
                     {...rest}
                     ref={null} // react-hook-form doesn't need ref for file inputs if onChange is used
                   />
               </FormControl>
               <FormDescription>
-                Formats: Média (vidéo, audio, image) ou Document (texte). Taille max: 10MB.
+                Seuls les fichiers vidéo sont acceptés. Taille max: 10MB.
               </FormDescription>
               <FormMessage />
             </FormItem>
