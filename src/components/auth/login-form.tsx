@@ -20,7 +20,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { getFirebaseServices } from "@/lib/firebase";
+import { useAuth } from '@/firebase';
 
 const formSchema = z.object({
   email: z.string().email("Adresse e-mail invalide."),
@@ -32,6 +32,7 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const auth = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,8 +45,6 @@ export default function LoginForm() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    
-    const { auth } = getFirebaseServices();
     
     if (!auth) {
       toast({

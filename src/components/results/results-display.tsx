@@ -21,7 +21,7 @@ import {
   Info
 } from "lucide-react";
 import Image from "next/image";
-import { getFirebaseServices } from "@/lib/firebase";
+import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, orderBy, DocumentData } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -40,11 +40,11 @@ export default function ResultsDisplay() {
   const [rankingsData, setRankingsData] = useState<{ [key: string]: RankedSubmission[] }>({});
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const firestore = useFirestore();
   
   useEffect(() => {
     const fetchAndProcessRankings = async () => {
       setLoading(true);
-      const { firestore } = getFirebaseServices();
       if (!firestore) {
         toast({ title: "Erreur", description: "Firestore n'est pas disponible.", variant: "destructive" });
         setLoading(false);
@@ -88,7 +88,7 @@ export default function ResultsDisplay() {
     };
 
     fetchAndProcessRankings();
-  }, [toast]);
+  }, [firestore, toast]);
 
   const hasAnyResults = Object.values(rankingsData).some(arr => arr.length > 0);
 

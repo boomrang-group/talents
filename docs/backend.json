@@ -1,0 +1,67 @@
+{
+    "backend": {
+        "project_id": "bantudemy-contes-1721151602127",
+        "firebase_config": {
+            "apiKey": "...",
+            "authDomain": "bantudemy-contes-1721151602127.firebaseapp.com",
+            "projectId": "bantudemy-contes-1721151602127",
+            "storageBucket": "bantudemy-contes-1721151602127.appspot.com",
+            "messagingSenderId": "85536341258",
+            "appId": "1:85536341258:web:b1d9c5780a4b7f8c92a6e9",
+            "measurementId": "G-L5G7V6J7S7"
+        },
+        "entities": {
+            "UserProfile": {
+                "title": "User Profile",
+                "description": "Represents a user's profile in the application.",
+                "type": "object",
+                "properties": {
+                    "uid": {
+                        "type": "string",
+                        "description": "The user's unique ID from Firebase Authentication."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The user's full name."
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "description": "The user's email address."
+                    },
+                    "accountType": {
+                        "type": "string",
+                        "enum": [
+                            "individual",
+                            "group"
+                        ]
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "uid",
+                    "name",
+                    "email",
+                    "accountType",
+                    "createdAt"
+                ]
+            }
+        },
+        "auth": {
+            "providers": [
+                "email-password"
+            ]
+        },
+        "firestore": {
+            "/users/{userId}": {
+                "schema": {
+                    "$ref": "#/backend/entities/UserProfile"
+                },
+                "description": "Stores public information about a user."
+            }
+        }
+    }
+}

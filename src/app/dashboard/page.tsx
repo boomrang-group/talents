@@ -8,9 +8,8 @@ import { UploadCloud, Badge as BadgeIcon, History, PlusCircle, Eye, ThumbsUp, Fi
 import Link from "next/link";
 import Image from "next/image";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useAuth } from "@/context/auth-context";
+import { useUser, useFirestore } from "@/firebase";
 import { useEffect, useState } from "react";
-import { getFirebaseServices } from "@/lib/firebase";
 import { doc, onSnapshot, collection, query, where, DocumentData } from "firebase/firestore";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -41,21 +40,15 @@ const userBadges: any[] = [];
 const competitionHistory: any[] = [];
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { data: user } = useUser();
+  const firestore = useFirestore();
   const [userProfile, setUserProfile] = useState<any | null>(null);
   const [userSubmissions, setUserSubmissions] = useState<UserSubmission[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      const { firestore } = getFirebaseServices();
-      if (!firestore) {
-        setLoadingProfile(false);
-        setLoadingSubmissions(false);
-        return;
-      };
-
+    if (user && firestore) {
       // Listener for user profile
       const userDocRef = doc(firestore, 'users', user.uid);
       const unsubscribeProfile = onSnapshot(userDocRef, (docSnap) => {
@@ -90,7 +83,7 @@ export default function DashboardPage() {
       setLoadingProfile(false);
       setLoadingSubmissions(false);
     }
-  }, [user]);
+  }, [user, firestore]);
 
   const canSubmit = !loadingProfile && userProfile?.paymentStatus === 'completed';
 

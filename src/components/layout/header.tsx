@@ -2,8 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useAuth } from '@/context/auth-context';
-import { getFirebaseServices } from '@/lib/firebase';
+import { useUser, useAuth as useFirebaseAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import Logo from './logo';
 import { Button } from '@/components/ui/button';
@@ -38,13 +37,13 @@ const NavLink = ({ href, label, icon: Icon, onClick }: { href: string; label: st
 };
 
 const Header = () => {
-  const { user } = useAuth();
+  const { data: user } = useUser();
+  const auth = useFirebaseAuth();
   const isLoggedIn = !!user;
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false)
 
   const handleLogout = async () => {
-    const { auth } = getFirebaseServices();
     if(!auth) return; // Silently fail if firebase is not configured
     try {
       await signOut(auth);

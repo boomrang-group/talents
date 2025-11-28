@@ -6,7 +6,7 @@ import { CheckCircle, ExternalLink, AlertTriangle, Loader2 } from 'lucide-react'
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
-import { getFirebaseServices } from '@/lib/firebase';
+import { useFirestore } from '@/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
@@ -14,6 +14,7 @@ export default function PaymentSuccessContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
   
   const [isProcessing, setIsProcessing] = useState(true);
   const [statusMessage, setStatusMessage] = useState("Vérification du paiement, veuillez patienter...");
@@ -41,7 +42,6 @@ export default function PaymentSuccessContent() {
     }).catch(err => console.error("Could not optimistically update payment status:", err));
 
 
-    const { firestore } = getFirebaseServices();
     if (!firestore) {
         setStatusMessage("Erreur de configuration du serveur. Veuillez contacter le support.");
         setErrorOccurred(true);
@@ -98,7 +98,7 @@ export default function PaymentSuccessContent() {
         clearTimeout(timeoutId);
         unsubscribe();
     };
-  }, [userProfileId, router, toast]);
+  }, [userProfileId, router, toast, firestore]);
 
   if (isProcessing) {
     return (

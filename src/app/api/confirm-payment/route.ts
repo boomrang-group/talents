@@ -1,11 +1,11 @@
 // src/app/api/confirm-payment/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseServices } from '@/lib/firebase';
+import { initializeFirebase } from '@/firebase';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
-  const { firestore } = getFirebaseServices();
+  const { firestore } = initializeFirebase();
   if (!firestore) {
     return NextResponse.json({ message: "Le service Firestore n'est pas disponible." }, { status: 500 });
   }

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useParams, useRouter } from "next/navigation";
 import { ThumbsUp, ArrowLeft, Loader2, Info } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getFirebaseServices } from "@/lib/firebase";
+import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, DocumentData } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import MuxPlayer from "@mux/mux-player-react";
@@ -32,6 +32,7 @@ export default function VoteChallengePage() {
   const router = useRouter();
   const { toast } = useToast();
   const challengeId = params.challengeId as string;
+  const firestore = useFirestore();
 
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,17 +42,10 @@ export default function VoteChallengePage() {
   const challengeDescription = `Votez pour votre projet préféré dans la catégorie ${challengeTitle}.`;
   
   useEffect(() => {
-    if (!challengeId) return;
+    if (!challengeId || !firestore) return;
 
     const fetchSubmissions = async () => {
       setLoading(true);
-      const { firestore } = getFirebaseServices();
-      if (!firestore) {
-        toast({ title: "Erreur", description: "Firestore n'est pas disponible.", variant: "destructive" });
-        setLoading(false);
-        return;
-      }
-
       try {
         const submissionsCol = collection(firestore, "submissions");
         const q = query(submissionsCol, where("category", "==", challengeId), where("status", "==", "validated"));
@@ -73,7 +67,7 @@ export default function VoteChallengePage() {
     };
 
     fetchSubmissions();
-  }, [challengeId, toast]);
+  }, [challengeId, firestore, toast]);
 
   const handleVote = async (submissionId: string) => {
     setVotingSubmissionId(submissionId);

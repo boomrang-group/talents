@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MoreHorizontal, ListFilter, Loader2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getFirebaseServices } from "@/lib/firebase";
+import { useFirestore } from '@/firebase';
 import { collection, onSnapshot, Timestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
@@ -43,9 +43,9 @@ export default function AdminSubmissionsPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   useEffect(() => {
-    const { firestore } = getFirebaseServices();
     if (!firestore) {
       toast({ title: "Erreur", description: "Firestore n'est pas disponible.", variant: "destructive" });
       setLoading(false);
@@ -68,7 +68,7 @@ export default function AdminSubmissionsPage() {
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
-  }, [toast]);
+  }, [firestore, toast]);
 
   const formatDate = (timestamp: Timestamp) => {
     if (!timestamp) return 'N/A';

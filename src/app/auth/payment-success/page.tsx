@@ -5,27 +5,31 @@ import AuthLayout from '@/components/auth/auth-layout';
 import { Suspense, useState, useEffect } from 'react'; 
 import PaymentSuccessContent from '@/components/auth/payment-success-content';
 import { Skeleton } from '@/components/ui/skeleton'; 
+import { FirebaseProvider, initializeFirebase } from '@/firebase';
 
 export default function PaymentSuccessPage() {
   const [isClient, setIsClient] = useState(false);
+  const { firebaseApp, firestore, auth } = initializeFirebase();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   return (
-    <AuthLayout
-      title="Inscription Réussie et Paiement Confirmé !"
-      description="Bienvenue à Talents Bantudemy !"
-    >
-      {isClient ? (
-        <Suspense fallback={<PaymentSuccessPageSkeleton />}>
-          <PaymentSuccessContent />
-        </Suspense>
-      ) : (
-        <PaymentSuccessPageSkeleton /> 
-      )}
-    </AuthLayout>
+    <FirebaseProvider firebaseApp={firebaseApp} firestore={firestore} auth={auth}>
+      <AuthLayout
+        title="Inscription Réussie et Paiement Confirmé !"
+        description="Bienvenue à Talents Bantudemy !"
+      >
+        {isClient ? (
+          <Suspense fallback={<PaymentSuccessPageSkeleton />}>
+            <PaymentSuccessContent />
+          </Suspense>
+        ) : (
+          <PaymentSuccessPageSkeleton /> 
+        )}
+      </AuthLayout>
+    </FirebaseProvider>
   );
 }
 

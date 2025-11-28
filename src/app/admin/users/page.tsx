@@ -10,7 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { MoreHorizontal, PlusCircle, File, Loader2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getFirebaseServices } from "@/lib/firebase";
+import { useFirestore } from '@/firebase';
 import { collection, getDocs } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,10 +28,10 @@ export default function AdminUsersPage() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
     const { toast } = useToast();
+    const firestore = useFirestore();
 
     useEffect(() => {
         const fetchUsers = async () => {
-            const { firestore } = getFirebaseServices();
             if (!firestore) {
                 toast({
                     title: "Erreur de configuration",
@@ -60,7 +60,7 @@ export default function AdminUsersPage() {
         };
 
         fetchUsers();
-    }, [toast]);
+    }, [firestore, toast]);
 
     const getAccountStatus = (paymentStatus: string) => {
         switch (paymentStatus) {

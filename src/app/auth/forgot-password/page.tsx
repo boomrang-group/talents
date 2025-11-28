@@ -11,7 +11,7 @@ import * as z from 'zod';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { getFirebaseServices } from '@/lib/firebase';
+import { useAuth } from '@/firebase';
 import {
   Form,
   FormControl,
@@ -29,6 +29,7 @@ const formSchema = z.object({
 export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const auth = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,7 +38,6 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    const { auth } = getFirebaseServices();
     
     if (!auth) {
       toast({

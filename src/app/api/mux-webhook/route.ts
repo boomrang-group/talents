@@ -1,7 +1,7 @@
 // src/app/api/mux-webhook/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseServices } from '@/lib/firebase';
+import { initializeFirebase } from '@/firebase';
 import { collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import Mux from '@mux/mux-node';
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: 'Signature verification failed.' }, { status: 401 });
     }
     
-    const { firestore } = getFirebaseServices();
+    const { firestore } = initializeFirebase();
     if (!firestore) {
         console.error('Firestore service is not available.');
         return NextResponse.json({ message: 'Internal Server Error: Firestore not configured' }, { status: 500 });

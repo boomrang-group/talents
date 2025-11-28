@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, FileText, Vote, BarChart3, Loader2 } from "lucide-react";
-import { getFirebaseServices } from '@/lib/firebase';
+import { useFirestore } from '@/firebase';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
@@ -16,9 +16,9 @@ export default function AdminDashboardPage() {
   });
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const firestore = useFirestore();
 
   useEffect(() => {
-    const { firestore } = getFirebaseServices();
     if (!firestore) {
       toast({ title: "Erreur", description: "Firestore n'est pas disponible.", variant: "destructive" });
       setLoading(false);
@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
 
     // Cleanup listeners on unmount
     return () => unsubscribers.forEach(unsub => unsub());
-  }, [toast]);
+  }, [firestore, toast]);
 
 
   return (

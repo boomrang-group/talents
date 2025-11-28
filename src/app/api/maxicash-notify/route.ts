@@ -1,11 +1,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseServices } from '@/lib/firebase';
+import { initializeFirebase } from '@/firebase';
 import { doc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 export async function POST(request: NextRequest) {
   try {
-    const { firestore } = getFirebaseServices();
+    const { firestore } = initializeFirebase();
     if (!firestore) {
       console.error('Firestore service is not available.');
       return new NextResponse('Internal Server Error: Firestore not configured', { status: 500 });

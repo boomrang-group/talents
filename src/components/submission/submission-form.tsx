@@ -22,8 +22,7 @@ import { PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useAuth } from "@/context/auth-context";
-import { getFirebaseServices } from "@/lib/firebase";
+import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { Progress } from "@/components/ui/progress";
 
@@ -60,7 +59,8 @@ export default function SubmissionForm() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { data: user } = useUser();
+  const firestore = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   
@@ -100,7 +100,6 @@ export default function SubmissionForm() {
       return;
     }
 
-    const { firestore } = getFirebaseServices();
     if (!firestore) {
         toast({ title: "Erreur de configuration", description: "Services Firebase non disponibles.", variant: "destructive" });
         setIsLoading(false);

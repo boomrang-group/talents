@@ -1,12 +1,12 @@
 // src/app/api/vote/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getFirebaseServices } from '@/lib/firebase';
+import { initializeFirebase } from '@/firebase';
 import { doc, runTransaction, collection, addDoc, serverTimestamp, query, where, getDocs, limit } from 'firebase/firestore';
 import { headers } from 'next/headers';
 
 export async function POST(request: NextRequest) {
-  const { firestore } = getFirebaseServices();
+  const { firestore } = initializeFirebase();
   if (!firestore) {
     return NextResponse.json({ message: "Le service Firestore n'est pas disponible." }, { status: 500 });
   }
