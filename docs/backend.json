@@ -1,67 +1,417 @@
 {
-    "backend": {
-        "project_id": "bantudemy-contes-1721151602127",
-        "firebase_config": {
-            "apiKey": "your-api-key",
-            "authDomain": "bantudemy-contes-1721151602127.firebaseapp.com",
-            "projectId": "bantudemy-contes-1721151602127",
-            "storageBucket": "bantudemy-contes-1721151602127.appspot.com",
-            "messagingSenderId": "85536341258",
-            "appId": "1:85536341258:web:b1d9c5780a4b7f8c92a6e9",
-            "measurementId": "G-L5G7V6J7S7"
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the BantuChamp platform, either an individual student or a group.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
         },
-        "entities": {
-            "UserProfile": {
-                "title": "User Profile",
-                "description": "Represents a user's profile in the application.",
-                "type": "object",
-                "properties": {
-                    "uid": {
-                        "type": "string",
-                        "description": "The user's unique ID from Firebase Authentication."
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "The user's full name."
-                    },
-                    "email": {
-                        "type": "string",
-                        "format": "email",
-                        "description": "The user's email address."
-                    },
-                    "accountType": {
-                        "type": "string",
-                        "enum": [
-                            "individual",
-                            "group"
-                        ]
-                    },
-                    "createdAt": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "uid",
-                    "name",
-                    "email",
-                    "accountType",
-                    "createdAt"
-                ]
-            }
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
         },
-        "auth": {
-            "providers": [
-                "email-password"
-            ]
+        "phoneNumber": {
+          "type": "string",
+          "description": "User's phone number for SMS verification and notifications."
         },
-        "firestore": {
-            "/users/{userId}": {
-                "schema": {
-                    "$ref": "#/backend/entities/UserProfile"
-                },
-                "description": "Stores public information about a user."
-            }
+        "isGroup": {
+          "type": "boolean",
+          "description": "Indicates whether the user represents a group or an individual."
+        },
+        "groupName": {
+          "type": "string",
+          "description": "The name of the group, if the user represents a group."
+        },
+        "teamMemberIds": {
+          "type": "array",
+          "description": "References to Users that are members of this group. (Relationship: User 1:N User)",
+          "items": {
+            "type": "string"
+          }
         }
+      },
+      "required": [
+        "id",
+        "email",
+        "phoneNumber",
+        "isGroup"
+      ]
+    },
+    "Submission": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Submission",
+      "type": "object",
+      "description": "Represents a submission to the BantuChamp competition.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Submission entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who made the submission. (Relationship: User 1:N Submission)"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the submission."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the submission."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the submission."
+        },
+        "submissionDate": {
+          "type": "string",
+          "description": "Date and time of the submission.",
+          "format": "date-time"
+        },
+        "mediaUrl": {
+          "type": "string",
+          "description": "URL of the submitted media (video, audio, image, or document).",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "title",
+        "description",
+        "category",
+        "submissionDate",
+        "mediaUrl"
+      ]
+    },
+    "Vote": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Vote",
+      "type": "object",
+      "description": "Represents a vote cast by a user or jury member.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Vote entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who cast the vote. (Relationship: User 1:N Vote)"
+        },
+        "submissionId": {
+          "type": "string",
+          "description": "Reference to the Submission that was voted on. (Relationship: Submission 1:N Vote)"
+        },
+        "voteDate": {
+          "type": "string",
+          "description": "Date and time when the vote was cast.",
+          "format": "date-time"
+        },
+        "score": {
+          "type": "number",
+          "description": "Score given to the submission (if voted by a jury member)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "submissionId",
+        "voteDate"
+      ]
+    },
+    "Sponsor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Sponsor",
+      "type": "object",
+      "description": "Represents a sponsor or partner of the BantuChamp competition.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Sponsor entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the sponsor."
+        },
+        "logoUrl": {
+          "type": "string",
+          "description": "URL of the sponsor's logo.",
+          "format": "uri"
+        },
+        "visibilityLevel": {
+          "type": "string",
+          "description": "Level of visibility for the sponsor (e.g., Gold, Silver, Bronze)."
+        },
+        "impactMetrics": {
+          "type": "string",
+          "description": "Metrics related to the impact of the sponsor's partnership."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "logoUrl",
+        "visibilityLevel"
+      ]
+    },
+    "Notification": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Notification",
+      "type": "object",
+      "description": "Represents a notification sent to a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Notification entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who will receive the notification. (Relationship: User 1:N Notification)"
+        },
+        "message": {
+          "type": "string",
+          "description": "Content of the notification."
+        },
+        "sentDate": {
+          "type": "string",
+          "description": "Date and time when the notification was sent.",
+          "format": "date-time"
+        },
+        "medium": {
+          "type": "string",
+          "description": "Medium through which the notification was sent (e.g., email, WhatsApp)."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "message",
+        "sentDate",
+        "medium"
+      ]
+    },
+    "Badge": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Badge",
+      "type": "object",
+      "description": "Represents a badge earned by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Badge entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who earned the badge. (Relationship: User 1:N Badge)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the badge."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the badge."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the badge image.",
+          "format": "uri"
+        },
+        "awardedDate": {
+          "type": "string",
+          "description": "Date and time when the badge was awarded.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "name",
+        "description",
+        "imageUrl",
+        "awardedDate"
+      ]
+    },
+    "CompetitionPhase": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CompetitionPhase",
+      "type": "object",
+      "description": "Represents a phase in the BantuChamp competition.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CompetitionPhase entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the competition phase (e.g., Eliminations, Quarterfinals, Semifinals, Finals)."
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Start date and time of the competition phase.",
+          "format": "date-time"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "End date and time of the competition phase.",
+          "format": "date-time"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of what happens during this phase."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "startDate",
+        "endDate",
+        "description"
+      ]
     }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile data. Includes standard profile information like email, phone number, and group status. Only the user (or admin) should have read/write access. Includes denormalized 'members' map if the user represents a group.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/submissions/{submissionId}",
+        "definition": {
+          "entityName": "Submission",
+          "schema": {
+            "$ref": "#/backend/entities/Submission"
+          },
+          "description": "Stores submissions made by a user. Only the user (or admin) can create/modify their own submissions. Requires 'userId' for authorization.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who made the submission."
+            },
+            {
+              "name": "submissionId",
+              "description": "The unique identifier of the submission."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/votes/{voteId}",
+        "definition": {
+          "entityName": "Vote",
+          "schema": {
+            "$ref": "#/backend/entities/Vote"
+          },
+          "description": "Stores votes cast by a user. Only the user (or admin) can create/modify their own votes. Requires 'userId' for authorization.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who cast the vote."
+            },
+            {
+              "name": "voteId",
+              "description": "The unique identifier of the vote."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/sponsors/{sponsorId}",
+        "definition": {
+          "entityName": "Sponsor",
+          "schema": {
+            "$ref": "#/backend/entities/Sponsor"
+          },
+          "description": "Stores sponsor information.  Admin-only access for create/update/delete. Public read access.",
+          "params": [
+            {
+              "name": "sponsorId",
+              "description": "The unique identifier of the sponsor."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/notifications/{notificationId}",
+        "definition": {
+          "entityName": "Notification",
+          "schema": {
+            "$ref": "#/backend/entities/Notification"
+          },
+          "description": "Stores notifications for a specific user. Only the user (or admin) can access their own notifications. Requires 'userId' for authorization.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who receives the notification."
+            },
+            {
+              "name": "notificationId",
+              "description": "The unique identifier of the notification."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/badges/{badgeId}",
+        "definition": {
+          "entityName": "Badge",
+          "schema": {
+            "$ref": "#/backend/entities/Badge"
+          },
+          "description": "Stores badges earned by a user. Requires 'userId' for authorization.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user who earned the badge."
+            },
+            {
+              "name": "badgeId",
+              "description": "The unique identifier of the badge."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/competition_phases/{competitionPhaseId}",
+        "definition": {
+          "entityName": "CompetitionPhase",
+          "schema": {
+            "$ref": "#/backend/entities/CompetitionPhase"
+          },
+          "description": "Stores competition phase information. Admin-only access for create/update/delete. Public read access.",
+          "params": [
+            {
+              "name": "competitionPhaseId",
+              "description": "The unique identifier of the competition phase."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support the BantuChamp platform's core features, including user authentication, content submission, voting, and sponsorship display, while prioritizing security, scalability, and debuggability. The design adheres to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters).\n\n**Authorization Independence (CRITICAL):** Authorization Independence is achieved via denormalization. User roles and group memberships are copied into relevant documents (e.g., submissions). This eliminates the need for `get()` calls in security rules, enabling atomic operations and simplifying debugging.\n\n**Structural Segregation (Homogeneous Security Posture):** Documents with different access needs are stored in separate collections. For instance, user-specific data resides under `/users/{userId}`, ensuring only the user (or admins) can access it.\n\n**Access Modeling (Standardization and Consistency):**\n*   **Private Data:** User profiles and related data are stored under `/users/{userId}`, enforcing path-based ownership.\n*   **Collaborative Data:** The 'members' map is utilized for collaborative entities (though no explicit collaborative entities were specified in the input data). This approach is ready for future expansion.\n*   **Global Roles (DBAC):** No global roles are needed based on the data provided.\n\n**QAPs (Rules are not Filters):** The structure is designed to facilitate secure `list` operations. Data segregation (e.g., user-specific data under `/users/{userId}`) and denormalization ensure that rules can efficiently filter data without relying on complex server-side logic.\n\nFor example, when listing submissions, rules can filter by `userId` without needing to fetch user data. Voting access can be controlled by checking the voter's ID against the 'userId' in the `/users/{userId}/votes/{voteId}` path.\n\nTimestamps are stored directly in the documents.\n"
+  }
 }

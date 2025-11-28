@@ -1,9 +1,167 @@
+/**
+ * Core Philosophy: This ruleset enforces a strict user-ownership model where all user-generated content
+ * is sandboxed within their own data tree. Access is granted based on the user's authenticated ID matching
+ * the ID in the document path. Publicly readable data is stored in separate top-level collections
+ * with write access disabled pending the implementation of an administrative role.
+ *
+ * Data Structure: User-specific data (profiles, submissions, votes, notifications, badges) is nested
+ * under `/users/{userId}`. Globally accessible, read-only data (sponsors, competition phases)
+ * is stored in dedicated top-level collections.
+ *
+ * Key Security Decisions:
+ * - User data is private by default. Users can only access documents within their own `/users/{userId}` path.
+ * - The top-level `/users` collection is not listable to prevent user data enumeration.
+ * - Public collections (`sponsors`, `competition_phases`) are read-only for all users. Write access is
+ *   explicitly disabled as an administrative role is not yet defined.
+ * - Relational integrity is enforced on `create` and `update` for fields critical to authorization (e.g., `userId`),
+ *   but other data fields are not validated to allow for flexible prototyping.
+ */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // By default, deny all reads and writes
-    match /{document=**} {
-      allow read, write: if false;
+
+    // --------------------------------------------------------------------------------
+    // Helper Functions
+    // --------------------------------------------------------------------------------
+
+    /**
+     * Checks if a user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Checks if the currently authenticated user's UID matches the provided userId.
+     * This is the foundation of the user-ownership model.
+     * @param userId The user ID to check against the authenticated user's UID.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Checks for ownership on an existing document. Used for update and delete operations
+     * to prevent acting on non-existent data.
+     * @param userId The user ID to check against the authenticated user's UID.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // --------------------------------------------------------------------------------
+    // User Data Collections
+    // --------------------------------------------------------------------------------
+
+    /**
+     * @description Manages user profile documents.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own user profile document. `auth.uid: "user_abc"`, `path: /users/user_abc`.
+     * @deny (list) Any user attempting to list all documents in the `/users` collection.
+     * @principle Restricts access to a user's own data tree and allows profile self-creation.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Manages submissions created by a user.
+       * @path /users/{userId}/submissions/{submissionId}
+       * @allow (create) An authenticated user creating a submission for themselves. `auth.uid: "user_abc"`, `path: /users/user_abc/submissions/sub_123`.
+       * @deny (get) Another user trying to read a submission. `auth.uid: "user_xyz"`, `path: /users/user_abc/submissions/sub_123`.
+       * @principle Enforces that users can only manage their own submissions.
+       */
+      match /submissions/{submissionId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages votes cast by a user.
+       * @path /users/{userId}/votes/{voteId}
+       * @allow (create) An authenticated user creating a vote for themselves. `auth.uid: "user_abc"`, `path: /users/user_abc/votes/vote_123`.
+       * @deny (update) Another user trying to change a vote. `auth.uid: "user_xyz"`, `path: /users/user_abc/votes/vote_123`.
+       * @principle Enforces that users can only manage their own votes.
+       */
+      match /votes/{voteId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages notifications intended for a user.
+       * @path /users/{userId}/notifications/{notificationId}
+       * @allow (get) An authenticated user reading their own notification. `auth.uid: "user_abc"`, `path: /users/user_abc/notifications/notif_123`.
+       * @deny (list) Another user trying to list notifications. `auth.uid: "user_xyz"`, `path: /users/user_abc/notifications`.
+       * @principle Enforces that users can only access their own notifications.
+       */
+      match /notifications/{notificationId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Manages badges earned by a user.
+       * @path /users/{userId}/badges/{badgeId}
+       * @allow (list) An authenticated user listing their own badges. `auth.uid: "user_abc"`, `path: /users/user_abc/badges`.
+       * @deny (create) Another user trying to award a badge. `auth.uid: "user_xyz"`, `path: /users/user_abc/badges/badge_123`.
+       * @principle Enforces that users can only view and manage their own badges.
+       */
+      match /badges/{badgeId} {
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+        allow delete: if isExistingOwner(userId);
+      }
+    }
+
+    // --------------------------------------------------------------------------------
+    // Public Data Collections
+    // --------------------------------------------------------------------------------
+
+    /**
+     * @description Manages sponsor information, which is public to all users.
+     * @path /sponsors/{sponsorId}
+     * @allow (get) Any user, signed in or not, reading a sponsor document.
+     * @deny (create) Any user attempting to create a new sponsor document.
+     * @principle Provides public read access while securing write operations for administrators.
+     */
+    match /sponsors/{sponsorId} {
+      allow get: if true;
+      allow list: if true;
+      // CRITICAL: Write access is disabled. Implement an admin check (e.g., using custom claims) to allow writes.
+      allow create: if false; // TODO: Change to `if isAdmin()` once admin logic is implemented.
+      allow update: if false; // TODO: Change to `if isAdmin()` once admin logic is implemented.
+      allow delete: if false; // TODO: Change to `if isAdmin()` once admin logic is implemented.
+    }
+
+    /**
+     * @description Manages competition phase information, which is public to all users.
+     * @path /competition_phases/{competitionPhaseId}
+     * @allow (list) Any user, signed in or not, listing all competition phases.
+     * @deny (update) Any user attempting to modify a competition phase.
+     * @principle Provides public read access while securing write operations for administrators.
+     */
+    match /competition_phases/{competitionPhaseId} {
+      allow get: if true;
+      allow list: if true;
+      // CRITICAL: Write access is disabled. Implement an admin check (e.g., using custom claims) to allow writes.
+      allow create: if false; // TODO: Change to `if isAdmin()` once admin logic is implemented.
+      allow update: if false; // TODO: Change to `if isAdmin()` once admin logic is implemented.
+      allow delete: if false; // TODO: Change to `if isAdmin()` once admin logic is implemented.
     }
   }
 }
