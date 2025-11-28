@@ -2,7 +2,7 @@
     "backend": {
         "project_id": "bantudemy-contes-1721151602127",
         "firebase_config": {
-            "apiKey": "...",
+            "apiKey": "your-api-key",
             "authDomain": "bantudemy-contes-1721151602127.firebaseapp.com",
             "projectId": "bantudemy-contes-1721151602127",
             "storageBucket": "bantudemy-contes-1721151602127.appspot.com",
