@@ -22,7 +22,7 @@ import Link from "next/link";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation"; 
-import { useAuth, useFirestore } from '@/firebase';
+import { useAuth, useFirestore, setDocumentNonBlocking } from '@/firebase';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { setDoc, doc, serverTimestamp } from "firebase/firestore";
 
@@ -176,7 +176,10 @@ export default function SignupForm() {
       };
 
       // Use user.uid as the document ID for easy lookup
-      await setDoc(doc(firestore, "users", user.uid), userProfileData);
+      // Use the non-blocking update function to ensure contextual errors are thrown
+      const userDocRef = doc(firestore, "users", user.uid);
+      setDocumentNonBlocking(userDocRef, userProfileData, { merge: false });
+
 
       toast({
         title: "Compte Créé !",
