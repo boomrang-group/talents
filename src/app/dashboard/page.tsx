@@ -85,7 +85,7 @@ export default function DashboardPage() {
     }
   }, [user, firestore]);
 
-  const canSubmit = !loadingProfile && userProfile?.paymentStatus === 'completed';
+  const canSubmit = !loadingProfile && user;
 
   return (
     <div className="container py-8 md:py-12">
@@ -103,6 +103,16 @@ export default function DashboardPage() {
           <Alert className="mb-8"><Skeleton className="h-12 w-full" /></Alert>
       )}
       
+       {!loadingProfile && userProfile?.paymentStatus !== 'completed' && (
+         <Alert className="mb-8 border-yellow-500/50 bg-yellow-50/50 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300">
+            <CreditCard className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+            <AlertTitle className="font-semibold">Finalisez votre inscription</AlertTitle>
+            <AlertDescription>
+                Votre inscription est presque terminée. Le paiement des frais de participation est optionnel mais recommandé pour soutenir la compétition.
+                 <Link href="/auth/payment" className="font-bold underline ml-2">Procéder au paiement</Link>
+            </AlertDescription>
+        </Alert>
+       )}
        {!loadingProfile && userProfile?.paymentStatus === 'completed' && (
         <Alert className="mb-8 border-primary/50 bg-primary/10 text-primary">
             <Info className="h-5 w-5 text-primary" />
