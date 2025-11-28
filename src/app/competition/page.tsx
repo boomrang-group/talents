@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,17 +36,9 @@ export default function CompetitionPage() {
         <Trophy className="mx-auto h-16 w-16 text-primary mb-4" />
         <h1 className="text-4xl md:text-5xl font-bold font-headline">La Compétition</h1>
         <p className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">
-          La compétition débutera le 4 Août. Préparez-vous à participer !
+          Soumettez votre projet et participez au vote pour élire les meilleurs talents !
         </p>
       </div>
-
-      <Alert className="mb-8 border-primary/50 bg-primary/10 text-primary">
-          <Info className="h-5 w-5 text-primary" />
-          <AlertTitle className="font-semibold">La compétition n'a pas encore commencé !</AlertTitle>
-          <AlertDescription>
-            Le coup d'envoi sera donné le 4 Août. Revenez pour soumettre vos projets et assister aux battles.
-          </AlertDescription>
-      </Alert>
 
       <div className="text-center mb-8">
         <h2 className="text-2xl font-semibold font-headline">Choisissez une catégorie pour participer ou voter</h2>

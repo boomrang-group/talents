@@ -106,9 +106,9 @@ export default function DashboardPage() {
        {!loadingProfile && userProfile?.paymentStatus === 'completed' && (
         <Alert className="mb-8 border-primary/50 bg-primary/10 text-primary">
             <Info className="h-5 w-5 text-primary" />
-            <AlertTitle className="font-semibold">La compétition approche !</AlertTitle>
+            <AlertTitle className="font-semibold">Bienvenue !</AlertTitle>
             <AlertDescription>
-                Les soumissions de projets ouvriront le 4 août. Préparez-vous !
+                Vous pouvez maintenant soumettre vos projets pour la compétition.
             </AlertDescription>
         </Alert>
        )}
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                 })}
               </ul>
             ) : (
-              <p className="text-muted-foreground text-center py-10">Vous n'avez pas encore soumis de projet. Revenez après le 4 août !</p>
+              <p className="text-muted-foreground text-center py-10">Vous n'avez pas encore soumis de projet. Cliquez sur "Nouvelle Soumission" pour commencer.</p>
             )}
           </CardContent>
         </Card>

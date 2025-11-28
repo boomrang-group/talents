@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from 'react';
@@ -5,8 +6,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from 'lucide-react';
 
-// Mock event data
+// Mock event data - UPDATED for current competition phase
 const competitionEvents = [
+  { date: new Date(2024, 7, 4), title: "Début de la Compétition", description: "Lancement officiel et ouverture des soumissions." }, // August 4
   { date: new Date(2024, 7, 31), title: "Deadline Soumission Projets", description: "Dernier jour pour soumettre vos projets." }, // August 31
   { date: new Date(2024, 8, 5), title: "Début Votes Publics", description: "La phase de vote public commence." }, // September 5
   { date: new Date(2024, 8, 20), title: "Annonce des Finalistes", description: "Les finalistes seront annoncés." }, // September 20
