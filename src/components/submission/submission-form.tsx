@@ -22,8 +22,8 @@ import { PlusCircle, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { useUser, useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection, serverTimestamp } from "firebase/firestore";
 import { Progress } from "@/components/ui/progress";
 
 
@@ -106,6 +106,8 @@ export default function SubmissionForm() {
         return;
     }
 
+    let genericError = false;
+
     try {
         // Step 1: Get an upload URL from our server
         const uploadUrlResponse = await fetch('/api/mux/upload', {
@@ -156,8 +158,9 @@ export default function SubmissionForm() {
             createdAt: serverTimestamp(),
             votes: 0,
         };
-
-        await addDoc(collection(firestore, "submissions"), submissionData);
+        
+        const submissionsColRef = collection(firestore, "submissions");
+        addDocumentNonBlocking(submissionsColRef, submissionData);
 
         toast({
             title: "Téléversement Réussi !",
@@ -168,6 +171,7 @@ export default function SubmissionForm() {
         router.push("/dashboard");
 
     } catch (error: any) {
+        genericError = true;
         console.error("Submission error:", error);
         toast({
             title: "Erreur de soumission",
@@ -175,8 +179,10 @@ export default function SubmissionForm() {
             variant: "destructive",
         });
     } finally {
-        setIsLoading(false);
-        setUploadProgress(null);
+        if (genericError) {
+          setIsLoading(false);
+          setUploadProgress(null);
+        }
     }
   }
 
