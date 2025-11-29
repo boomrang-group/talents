@@ -2,9 +2,9 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { useUser, useAuth as useFirebaseAuth } from '@/firebase';
-import { signOut } from 'firebase/auth';
+import { useState, useEffect } from 'react';
+import { useAuth as useFirebaseAuth } from '@/firebase';
+import { signOut, onAuthStateChanged, type User } from 'firebase/auth';
 import Logo from './logo';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -38,10 +38,23 @@ const NavLink = ({ href, label, icon: Icon, onClick }: { href: string; label: st
 };
 
 const Header = () => {
-  const { user, isUserLoading } = useUser();
   const auth = useFirebaseAuth();
   const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+  const [isUserLoading, setIsUserLoading] = useState(true);
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+
+  useEffect(() => {
+    if (!auth) {
+        setIsUserLoading(false);
+        return;
+    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setIsUserLoading(false);
+    });
+    return () => unsubscribe();
+  }, [auth]);
 
   const handleLogout = async () => {
     if(!auth) return; // Silently fail if firebase is not configured
@@ -154,4 +167,3 @@ const Header = () => {
 };
 
 export default Header;
-
