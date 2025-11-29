@@ -1,3 +1,4 @@
+
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,12 +52,12 @@ export default function WinnerProfileCard({ winner }: WinnerProfileCardProps) {
         <CardDescription className="text-primary font-medium">{winner.category}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow text-center space-y-3">
-        <h4 className="font-semibold text-lg">Projet: {winner.projectName}</h4>
+        <h4 className="font-semibold text-lg">Vidéo: {winner.projectName}</h4>
         <p className="text-sm text-muted-foreground leading-relaxed">{winner.bio}</p>
         
         {winner.media && (
           <div className="mt-4 pt-4 border-t">
-            <h5 className="text-sm font-semibold mb-2 text-left">Média du Projet:</h5>
+            <h5 className="text-sm font-semibold mb-2 text-left">Média de la Vidéo:</h5>
             <a href={winner.media.url} target="_blank" rel="noopener noreferrer" className="block hover:opacity-80 transition-opacity">
               <div className="relative w-full h-40 rounded-md overflow-hidden bg-muted">
                 <Image src={winner.media.url} alt={winner.media.title} fill className="object-cover" data-ai-hint={winner.media.dataAiHint}/>

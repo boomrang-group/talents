@@ -1,3 +1,4 @@
+
 // src/app/admin/submissions/page.tsx
 'use client'
 
@@ -108,7 +109,7 @@ export default function AdminSubmissionsPage() {
           <CardHeader>
             <CardTitle>Soumissions</CardTitle>
             <CardDescription>
-              Gérez et modérez tous les projets soumis par les participants.
+              Gérez et modérez toutes les vidéos soumises par les participants.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -124,7 +125,7 @@ export default function AdminSubmissionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Titre du projet</TableHead>
+                  <TableHead>Titre de la vidéo</TableHead>
                   <TableHead>Catégorie</TableHead>
                   <TableHead>Type Fichier</TableHead>
                   <TableHead>Statut</TableHead>

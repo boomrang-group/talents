@@ -92,7 +92,7 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold font-headline mb-4 md:mb-0">Mon Tableau de Bord</h1>
          <Link href={canSubmit ? "/submission" : "#"} passHref>
-            <Button disabled={!canSubmit} className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed">
+            <Button disabled={!user} className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-primary/50 disabled:cursor-not-allowed">
               <PlusCircle className="mr-2 h-5 w-5" />
               Nouvelle Soumission
             </Button>
@@ -113,15 +113,6 @@ export default function DashboardPage() {
             </AlertDescription>
         </Alert>
        )}
-       {!loadingProfile && userProfile?.paymentStatus === 'completed' && (
-        <Alert className="mb-8 border-primary/50 bg-primary/10 text-primary">
-            <Info className="h-5 w-5 text-primary" />
-            <AlertTitle className="font-semibold">Bienvenue !</AlertTitle>
-            <AlertDescription>
-                Vous pouvez maintenant soumettre vos projets pour la compétition.
-            </AlertDescription>
-        </Alert>
-       )}
 
 
       <div className="grid gap-6 mb-8 md:grid-cols-3">
@@ -137,7 +128,7 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Vues des Projets</CardTitle>
+            <CardTitle className="text-sm font-medium">Vues des Vidéos</CardTitle>
             <FileCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -162,7 +153,7 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center text-xl font-headline"><UploadCloud className="mr-2 h-6 w-6 text-primary" /> Mes Soumissions</CardTitle>
-            <CardDescription>Suivez l'état de vos projets soumis.</CardDescription>
+            <CardDescription>Suivez l'état de vos vidéos soumises.</CardDescription>
           </CardHeader>
           <CardContent>
             {loadingSubmissions ? (
@@ -190,7 +181,7 @@ export default function DashboardPage() {
                 })}
               </ul>
             ) : (
-              <p className="text-muted-foreground text-center py-10">Vous n'avez pas encore soumis de projet. Cliquez sur "Nouvelle Soumission" pour commencer.</p>
+              <p className="text-muted-foreground text-center py-10">Vous n'avez pas encore soumis de vidéo. Cliquez sur "Nouvelle Soumission" pour commencer.</p>
             )}
           </CardContent>
         </Card>

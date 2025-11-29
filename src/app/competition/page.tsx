@@ -36,7 +36,7 @@ export default function CompetitionPage() {
         <Trophy className="mx-auto h-16 w-16 text-primary mb-4" />
         <h1 className="text-4xl md:text-5xl font-bold font-headline">La Compétition</h1>
         <p className="text-lg text-muted-foreground mt-2 max-w-2xl mx-auto">
-          Soumettez votre projet et participez au vote pour élire les meilleurs talents !
+          Soumettez votre vidéo et participez au vote pour élire les meilleurs talents !
         </p>
       </div>
 

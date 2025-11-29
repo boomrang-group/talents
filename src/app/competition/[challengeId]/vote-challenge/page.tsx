@@ -1,3 +1,4 @@
+
 // src/app/competition/[challengeId]/vote-challenge/page.tsx
 'use client';
 
@@ -39,7 +40,7 @@ export default function VoteChallengePage() {
   const [votingSubmissionId, setVotingSubmissionId] = useState<string | null>(null);
 
   const challengeTitle = categoryNames[challengeId] || "Défi";
-  const challengeDescription = `Votez pour votre projet préféré dans la catégorie ${challengeTitle}.`;
+  const challengeDescription = `Votez pour votre vidéo préférée dans la catégorie ${challengeTitle}.`;
   
   useEffect(() => {
     if (!challengeId || !firestore) return;
@@ -60,7 +61,7 @@ export default function VoteChallengePage() {
         setSubmissions(submissionsList);
       } catch (error) {
         console.error("Error fetching submissions for voting:", error);
-        toast({ title: "Erreur", description: "Impossible de charger les projets pour le vote.", variant: "destructive" });
+        toast({ title: "Erreur", description: "Impossible de charger les vidéos pour le vote.", variant: "destructive" });
       } finally {
         setLoading(false);
       }
@@ -153,7 +154,7 @@ export default function VoteChallengePage() {
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 
                       <ThumbsUp className="mr-2 h-4 w-4" />
                     }
-                    {votingSubmissionId === submission.id ? "Vote en cours..." : "Voter pour ce projet"}
+                    {votingSubmissionId === submission.id ? "Vote en cours..." : "Voter pour cette vidéo"}
                   </Button>
                 </div>
               </div>

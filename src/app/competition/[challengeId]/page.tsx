@@ -16,7 +16,7 @@ const mockChallengeData: { [key: string]: any } = {
     category: "Technologie", 
     status: "À venir", 
     submissionsCount: 0,
-    description: "Ce défi vise à récompenser les projets technologiques les plus innovants et impactants. Les participants sont invités à présenter des solutions créatives aux problèmes actuels.",
+    description: "Ce défi vise à récompenser les vidéos technologiques les plus innovantes et impactantes. Les participants sont invités à présenter des solutions créatives aux problèmes actuels.",
     image: "https://placehold.co/800x400.png",
     dataAiHint: "technology innovation",
     criteria: ["Originalité", "Faisabilité technique", "Impact potentiel", "Qualité de la présentation"],
@@ -42,7 +42,7 @@ const mockChallengeData: { [key: string]: any } = {
     category: "Social", 
     status: "À venir", 
     submissionsCount: 0,
-    description: "Présentez des projets qui apportent des solutions concrètes à des problématiques sociales. L'objectif est de soutenir les initiatives à fort impact communautaire.",
+    description: "Présentez des vidéos qui apportent des solutions concrètes à des problématiques sociales. L'objectif est de soutenir les initiatives à fort impact communautaire.",
     image: "https://placehold.co/800x400.png",
     dataAiHint: "community project",
     criteria: ["Pertinence sociale", "Viabilité du projet", "Impact mesurable", "Innovation sociale"],
@@ -124,7 +124,7 @@ export default function ChallengeDetailsPage() {
           {challenge.status.includes("Soumissions") && (
             <div className="text-center pt-4">
               <Button size="lg" onClick={() => router.push(`/submission?category=${challenge.id === 'music-journey' ? 'musique' : challenge.category.toLowerCase().replace(/\s+/g, '_')}&challengeId=${challenge.id}`)} className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Soumettre votre projet pour ce défi
+                Soumettre votre vidéo pour ce défi
               </Button>
             </div>
           )}

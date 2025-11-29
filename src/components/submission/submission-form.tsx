@@ -93,7 +93,7 @@ export default function SubmissionForm() {
     if (!user) {
       toast({
         title: "Non authentifié",
-        description: "Vous devez être connecté pour soumettre un projet.",
+        description: "Vous devez être connecté pour soumettre une vidéo.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -105,8 +105,6 @@ export default function SubmissionForm() {
         setIsLoading(false);
         return;
     }
-
-    let genericError = false;
 
     try {
         // Step 1: Get an upload URL from our server
@@ -160,29 +158,31 @@ export default function SubmissionForm() {
         };
         
         const submissionsColRef = collection(firestore, "submissions");
-        addDocumentNonBlocking(submissionsColRef, submissionData);
+        addDocumentNonBlocking(submissionsColRef, submissionData)
+          .catch((error) => {
+            console.error("Error writing submission to Firestore:", error)
+            // The error is already handled globally by the non-blocking function
+          });
+
 
         toast({
             title: "Téléversement Réussi !",
-            description: `Votre projet "${values.title}" est en cours de traitement.`,
+            description: `Votre vidéo "${values.title}" est en cours de traitement.`,
             variant: "default",
         });
         form.reset();
         router.push("/dashboard");
 
     } catch (error: any) {
-        genericError = true;
         console.error("Submission error:", error);
         toast({
             title: "Erreur de soumission",
-            description: error.message || "Une erreur est survenue lors du téléversement de votre projet. Veuillez réessayer.",
+            description: error.message || "Une erreur est survenue lors du téléversement de votre vidéo. Veuillez réessayer.",
             variant: "destructive",
         });
     } finally {
-        if (genericError) {
-          setIsLoading(false);
-          setUploadProgress(null);
-        }
+        setIsLoading(false);
+        setUploadProgress(null);
     }
   }
 
@@ -196,9 +196,9 @@ export default function SubmissionForm() {
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Titre du projet/de l'œuvre</FormLabel>
+              <FormLabel>Titre de la vidéo</FormLabel>
               <FormControl>
-                <Input placeholder="Ex: Mon voyage poétique" {...field} />
+                <Input placeholder="Ex: Ma performance de danse" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -210,10 +210,10 @@ export default function SubmissionForm() {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Description générale du projet/de l'œuvre</FormLabel>
+              <FormLabel>Description de la vidéo</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Décrivez votre projet en quelques mots (max 500 caractères)..."
+                  placeholder="Décrivez votre vidéo en quelques mots (max 500 caractères)..."
                   className="resize-none"
                   {...field}
                 />
@@ -251,7 +251,7 @@ export default function SubmissionForm() {
           name="file"
           render={({ field: { onChange, value, ...rest } }) => ( 
             <FormItem>
-              <FormLabel>Fichier vidéo du projet</FormLabel>
+              <FormLabel>Fichier de la vidéo</FormLabel>
               <FormControl>
                  <Input 
                     type="file" 
@@ -337,7 +337,7 @@ export default function SubmissionForm() {
 
         <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90" disabled={isLoading}>
           {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-          {isLoading ? "Soumission en cours..." : "Soumettre mon Projet"}
+          {isLoading ? "Soumission en cours..." : "Soumettre ma Vidéo"}
         </Button>
       </form>
     </Form>

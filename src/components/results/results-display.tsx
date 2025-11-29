@@ -127,7 +127,7 @@ export default function ResultsDisplay() {
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-[50px]">Rang</TableHead>
-                          <TableHead>Projet / Participant</TableHead>
+                          <TableHead>Vidéo / Participant</TableHead>
                           <TableHead className="hidden md:table-cell">Votes</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -154,7 +154,7 @@ export default function ResultsDisplay() {
                               <Badge variant="secondary" className="text-sm">{item.votes || 0}</Badge>
                             </TableCell>
                             <TableCell className="text-right space-x-1">
-                              <Button variant="ghost" size="icon" title="Voir le projet">
+                              <Button variant="ghost" size="icon" title="Voir la vidéo">
                                 <Eye className="h-4 w-4" />
                               </Button>
                               {item.rank <=3 && (
