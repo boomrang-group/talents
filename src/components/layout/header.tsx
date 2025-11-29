@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -37,9 +38,8 @@ const NavLink = ({ href, label, icon: Icon, onClick }: { href: string; label: st
 };
 
 const Header = () => {
-  const { data: user } = useUser();
+  const { user, isUserLoading } = useUser();
   const auth = useFirebaseAuth();
-  const isLoggedIn = !!user;
   const router = useRouter();
   const [isSheetOpen, setIsSheetOpen] = useState(false)
 
@@ -69,34 +69,36 @@ const Header = () => {
           ))}
         </nav>
         <div className="hidden md:flex items-center space-x-2">
-          {isLoggedIn ? (
-            <>
-              <Link href="/dashboard" passHref>
-                <Button variant="outline" className="text-primary border-primary hover:bg-primary/10">
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Tableau de bord
+          {!isUserLoading && (
+            user ? (
+              <>
+                <Link href="/dashboard" passHref>
+                  <Button variant="outline" className="text-primary border-primary hover:bg-primary/10">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Tableau de bord
+                  </Button>
+                </Link>
+                <Button variant="ghost" onClick={handleLogout} className="hover:text-destructive">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Déconnexion
                 </Button>
-              </Link>
-              <Button variant="ghost" onClick={handleLogout} className="hover:text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                Déconnexion
-              </Button>
-            </>
-          ) : (
-            <>
-              <Link href="/auth/login" passHref>
-                <Button variant="ghost" className="hover:text-primary">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Connexion
-                </Button>
-              </Link>
-              <Link href="/auth/signup" passHref>
-                <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Inscription
-                </Button>
-              </Link>
-            </>
+              </>
+            ) : (
+              <>
+                <Link href="/auth/login" passHref>
+                  <Button variant="ghost" className="hover:text-primary">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Connexion
+                  </Button>
+                </Link>
+                <Link href="/auth/signup" passHref>
+                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Inscription
+                  </Button>
+                </Link>
+              </>
+            )
           )}
         </div>
         <div className="md:hidden">
@@ -125,19 +127,21 @@ const Header = () => {
                     <NavLink key={link.href} {...link} onClick={closeSheet} />
                   ))}
                    <hr className="my-4" />
-                  {isLoggedIn ? (
-                    <>
-                      <NavLink href="/dashboard" label="Tableau de bord" icon={LayoutDashboard} onClick={closeSheet} />
-                      <Button variant="ghost" onClick={() => { handleLogout(); closeSheet(); }} className="justify-start w-full text-base hover:text-destructive">
-                        <LogOut className="mr-2 h-5 w-5" />
-                        Déconnexion
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <NavLink href="/auth/login" label="Connexion" icon={LogIn} onClick={closeSheet}/>
-                      <NavLink href="/auth/signup" label="Inscription" icon={UserPlus} onClick={closeSheet}/>
-                    </>
+                  {!isUserLoading && (
+                    user ? (
+                      <>
+                        <NavLink href="/dashboard" label="Tableau de bord" icon={LayoutDashboard} onClick={closeSheet} />
+                        <Button variant="ghost" onClick={() => { handleLogout(); closeSheet(); }} className="justify-start w-full text-base hover:text-destructive">
+                          <LogOut className="mr-2 h-5 w-5" />
+                          Déconnexion
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <NavLink href="/auth/login" label="Connexion" icon={LogIn} onClick={closeSheet}/>
+                        <NavLink href="/auth/signup" label="Inscription" icon={UserPlus} onClick={closeSheet}/>
+                      </>
+                    )
                   )}
                 </nav>
               </div>
@@ -150,3 +154,4 @@ const Header = () => {
 };
 
 export default Header;
+
