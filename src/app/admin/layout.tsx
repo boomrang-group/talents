@@ -2,13 +2,10 @@
 import type { ReactNode } from 'react';
 import AdminSidebar from '@/components/admin/admin-sidebar';
 import AdminHeader from '@/components/admin/admin-header';
-import { FirebaseProvider, initializeFirebase } from '@/firebase';
 import { Suspense } from 'react';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
-  const { firebaseApp, firestore, auth } = initializeFirebase();
   return (
-    <FirebaseProvider firebaseApp={firebaseApp} firestore={firestore} auth={auth}>
       <div className="flex min-h-screen w-full bg-muted/40">
         <AdminSidebar />
         <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14 flex-1">
@@ -18,6 +15,5 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           </main>
         </div>
       </div>
-    </FirebaseProvider>
   );
 }

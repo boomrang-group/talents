@@ -4,7 +4,6 @@ import ResultsDisplay from "@/components/results/results-display";
 import { Award, Info, Users } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { FirebaseProvider, initializeFirebase } from '@/firebase';
 import { Suspense } from 'react';
 
 function ResultsPageContent() {
@@ -44,12 +43,9 @@ function ResultsPageContent() {
 }
 
 export default function ResultsPage() {
-  const { firebaseApp, firestore, auth } = initializeFirebase();
   return (
-    <FirebaseProvider firebaseApp={firebaseApp} firestore={firestore} auth={auth}>
       <Suspense>
         <ResultsPageContent />
       </Suspense>
-    </FirebaseProvider>
   )
 }
